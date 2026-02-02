@@ -34,10 +34,12 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderTokenTextArea := textarea.New()
 	decoderTokenTextArea.Placeholder = "Enter the JSON Web Token (JWT) here..."
 	decoderTokenTextArea.Prompt = ""
+	decoderTokenTextArea.ShowLineNumbers = false
 
 	decoderSecretTextArea := textarea.New()
 	decoderSecretTextArea.Placeholder = "Enter Secret"
 	decoderSecretTextArea.Prompt = ""
+	decoderSecretTextArea.ShowLineNumbers = false
 
 	decoderHeaderViewport := viewport.New()
 	decoderPayloadViewport := viewport.New()

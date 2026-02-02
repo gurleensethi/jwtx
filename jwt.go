@@ -16,7 +16,7 @@ func (r JWTDecodeResult) JsonMarshedHeader() string {
 		return ""
 	}
 
-	v, _ := json.MarshalIndent(r.Token.Header, "", " ")
+	v, _ := json.MarshalIndent(r.Token.Header, "", "  ")
 
 	return string(v)
 }
@@ -26,7 +26,7 @@ func (r JWTDecodeResult) JsonMarshledClaims() string {
 		return ""
 	}
 
-	v, _ := json.MarshalIndent(r.Token.Claims, "", " ")
+	v, _ := json.MarshalIndent(r.Token.Claims, "", "  ")
 
 	return string(v)
 }
