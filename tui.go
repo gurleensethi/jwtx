@@ -9,12 +9,12 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-type Screen string
+type View string
 type Element string
 
 var (
-	ScreenJWTEncoder Screen = "jwt_encoder"
-	ScreenJWTDecoder Screen = "jwt_decoder"
+	ViewJWTEncoder View = "jwt_encoder"
+	ViewJWTDecoder View = "jwt_decoder"
 
 	ElementEncoderJWTTextArea    Element = "el_encoder_jwt_text_area"
 	ElementEncoderSecretTextArea Element = "el_encoder_secret_text_area"
@@ -61,7 +61,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderPayloadViewport := viewport.New()
 
 	return BubbleTeaModel{
-		SelectedScreen:         ScreenJWTDecoder,
+		SelectedView:         ViewJWTDecoder,
 		SelectedElement:        ElementEncoderJWTTextArea,
 		DecoderTokenTextArea:   decoderTokenTextArea,
 		DecoderSecretTextArea:  decoderSecretTextArea,
@@ -73,7 +73,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 type BubbleTeaModel struct {
 	WindowSize tea.WindowSizeMsg
 
-	SelectedScreen  Screen
+	SelectedView  View
 	SelectedElement Element
 
 	// Decoding
@@ -160,8 +160,8 @@ func (m BubbleTeaModel) View() tea.View {
 		AltScreen: true,
 	}
 
-	switch m.SelectedScreen {
-	case ScreenJWTDecoder:
+	switch m.SelectedView {
+	case ViewJWTDecoder:
 		pane1 := lipgloss.JoinVertical(lipgloss.Left,
 			m.renderJsonWebTokenBox(),
 			m.renderSecretBox(),
@@ -237,10 +237,10 @@ func (m BubbleTeaModel) renderPayloadBox() string {
 func (m BubbleTeaModel) renderHeader() string {
 	decoderStyle, encoderStyle := styleInactiveScreen, styleInactiveScreen
 
-	switch m.SelectedScreen {
-	case ScreenJWTDecoder:
+	switch m.SelectedView {
+	case ViewJWTDecoder:
 		decoderStyle = styleActiveScreen
-	case ScreenJWTEncoder:
+	case ViewJWTEncoder:
 		encoderStyle = styleActiveScreen
 	}
 
