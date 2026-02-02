@@ -44,6 +44,20 @@ var (
 				Background(lipgloss.Color("#db3fce"))
 
 	styleBox = lipgloss.NewStyle().Border(lipgloss.NormalBorder())
+
+	styleFooter = lipgloss.NewStyle().
+			Padding(0, 2, 0, 2).
+			MarginTop(2)
+		// Foreground(lipgloss.Color("#000000")).
+		// Background(lipgloss.Color("#7a7a7a"))
+
+	styleFooterError = styleFooter.
+				Foreground(lipgloss.Color("#ffffff")).
+				Background(lipgloss.Color("#ca4a00"))
+
+	styleFooterSuccess = styleFooter.
+				Foreground(lipgloss.Color("#ffffff")).
+				Background(lipgloss.Color("#008202"))
 )
 
 func NewBubbleTeamModel() BubbleTeaModel {
@@ -61,7 +75,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderPayloadViewport := viewport.New()
 
 	return BubbleTeaModel{
-		SelectedView:         ViewJWTDecoder,
+		SelectedView:           ViewJWTDecoder,
 		SelectedElement:        ElementEncoderJWTTextArea,
 		DecoderTokenTextArea:   decoderTokenTextArea,
 		DecoderSecretTextArea:  decoderSecretTextArea,
@@ -73,7 +87,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 type BubbleTeaModel struct {
 	WindowSize tea.WindowSizeMsg
 
-	SelectedView  View
+	SelectedView    View
 	SelectedElement Element
 
 	// Decoding
@@ -98,6 +112,7 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Account for header height (header takes 1 line + margin)
 		headerHeight := 2
+		footerHeight := 1
 		heightDeduction := 6
 		widthDeduction := 2
 
@@ -105,7 +120,7 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		styleTitleSelected = styleTitleSelected.Width((msg.Width / 2) - widthDeduction)
 
 		// Adjust available height by subtracting header height
-		availableHeight := msg.Height - headerHeight
+		availableHeight := msg.Height - headerHeight - footerHeight
 
 		m.DecoderTokenTextArea.SetHeight((2 * availableHeight / 3) - heightDeduction)
 		m.DecoderTokenTextArea.SetWidth((msg.Width / 2) - widthDeduction)
@@ -180,6 +195,7 @@ func (m BubbleTeaModel) View() tea.View {
 		fullContent := lipgloss.JoinVertical(lipgloss.Center,
 			m.renderHeader(),
 			content,
+			m.renderFooter(),
 		)
 
 		v.SetContent(fullContent)
@@ -245,5 +261,31 @@ func (m BubbleTeaModel) renderHeader() string {
 	}
 
 	return styleHeader.Width(m.WindowSize.Width).
-		Render(decoderStyle.Render("JWT Decoder") + encoderStyle.Render(" | JWT Encoder"))
+		Render(decoderStyle.Render("JWT Decoder") + styleInactiveScreen.Render(" | ") + encoderStyle.Render("JWT Encoder"))
+}
+
+func (m BubbleTeaModel) renderFooter() string {
+	switch m.SelectedView {
+	case ViewJWTDecoder:
+		if m.DecoderTokenTextArea.Value() == "" {
+			return styleFooter.Width(m.WindowSize.Width).Render("")
+		}
+
+		if m.DecodeResult.Error != nil {
+			errMsg := m.DecodeResult.Error.Error()
+
+			switch {
+			case m.DecodeResult.IsTokenInvalid:
+				errMsg = "Unable to parse, token is invalid"
+			case m.DecodeResult.IsTokenInvalid:
+				errMsg = "Token signature is invalid"
+			}
+
+			return styleFooterError.Width(m.WindowSize.Width).Render(errMsg)
+		}
+
+		return styleFooterSuccess.Width(m.WindowSize.Width).Render("Token is valid")
+	}
+
+	return ""
 }

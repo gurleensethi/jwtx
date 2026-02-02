@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTDecodeResult struct {
-	Token *jwt.Token
-	Error error
+	Token              *jwt.Token
+	Error              error
+	IsTokenInvalid     bool
+	IsSignatureInvalid bool
 }
 
 func (r JWTDecodeResult) JsonMarshedHeader() string {
@@ -36,8 +39,20 @@ func JWTDecodeToken(token, secret string) JWTDecodeResult {
 		return []byte(secret), nil
 	}))
 
-	return JWTDecodeResult{
+	result := JWTDecodeResult{
 		Token: parsedToken,
 		Error: err,
 	}
+
+	if err != nil {
+		if strings.Contains(err.Error(), "token is malformed") {
+			result.IsTokenInvalid = true
+		}
+
+		if strings.Contains(err.Error(), "token signature is invalid") {
+			result.IsTokenInvalid = true
+		}
+	}
+
+	return result
 }
