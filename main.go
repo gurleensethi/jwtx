@@ -6,9 +6,8 @@ import (
 
 func main() {
 	// ctx := context.Background()
-	model := BubbleTeaModel{}
 
-	_, err := tea.NewProgram(model).Run()
+	_, err := tea.NewProgram(NewBubbleTeamModel()).Run()
 	if err != nil {
 		panic(err)
 	}
