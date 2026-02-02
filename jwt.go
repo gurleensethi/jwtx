@@ -50,7 +50,7 @@ func JWTDecodeToken(token, secret string) JWTDecodeResult {
 		}
 
 		if strings.Contains(err.Error(), "token signature is invalid") {
-			result.IsTokenInvalid = true
+			result.IsSignatureInvalid = true
 		}
 	}
 

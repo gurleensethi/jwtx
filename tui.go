@@ -43,13 +43,11 @@ var (
 	styleInactiveScreen = lipgloss.NewStyle().
 				Background(lipgloss.Color("#db3fce"))
 
-	styleBox = lipgloss.NewStyle().Border(lipgloss.NormalBorder())
+	styleBox = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
 
 	styleFooter = lipgloss.NewStyle().
 			Padding(0, 2, 0, 2).
 			MarginTop(2)
-		// Foreground(lipgloss.Color("#000000")).
-		// Background(lipgloss.Color("#7a7a7a"))
 
 	styleFooterError = styleFooter.
 				Foreground(lipgloss.Color("#ffffff")).
@@ -277,7 +275,7 @@ func (m BubbleTeaModel) renderFooter() string {
 			switch {
 			case m.DecodeResult.IsTokenInvalid:
 				errMsg = "Unable to parse, token is invalid"
-			case m.DecodeResult.IsTokenInvalid:
+			case m.DecodeResult.IsSignatureInvalid:
 				errMsg = "Token signature is invalid"
 			}
 
