@@ -235,27 +235,15 @@ func (m BubbleTeaModel) renderPayloadBox() string {
 }
 
 func (m BubbleTeaModel) renderHeader() string {
-	// Determine which screen is active and format accordingly
-	var decoderText string
-	var encoderText string
+	decoderStyle, encoderStyle := styleInactiveScreen, styleInactiveScreen
 
 	switch m.SelectedScreen {
 	case ScreenJWTDecoder:
-		decoderText = styleActiveScreen.Render("JWT Decoder")
-		encoderText = styleInactiveScreen.Render(" | JWT Encoder")
+		decoderStyle = styleActiveScreen
 	case ScreenJWTEncoder:
-		decoderText = styleInactiveScreen.Render("JWT Decoder")
-		encoderText = styleActiveScreen.Render(" | JWT Encoder")
+		encoderStyle = styleActiveScreen
 	}
 
-	headerContent := decoderText + encoderText
-
-	// Calculate the header width based on the window size, default to 80 if not set
-	headerWidth := 80
-	if m.WindowSize.Width > 0 {
-		headerWidth = m.WindowSize.Width
-	}
-	styleWithWidth := styleHeader.Width(headerWidth)
-
-	return styleWithWidth.Render(headerContent)
+	return styleHeader.Width(m.WindowSize.Width).
+		Render(decoderStyle.Render("JWT Decoder") + encoderStyle.Render(" | JWT Encoder"))
 }
