@@ -27,6 +27,22 @@ var (
 				Background(color.White).
 				Foreground(color.Black)
 
+	styleHeader = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#ffffff")).
+			Background(lipgloss.Color("#db3fce")).
+			Padding(1, 2).
+			MarginBottom(1).
+			Align(lipgloss.Center).
+			Bold(true)
+
+	styleActiveScreen = lipgloss.NewStyle().
+				Bold(true).
+				Underline(true).
+				Background(lipgloss.Color("#db3fce"))
+
+	styleInactiveScreen = lipgloss.NewStyle().
+				Background(lipgloss.Color("#db3fce"))
+
 	styleBox = lipgloss.NewStyle().Border(lipgloss.NormalBorder())
 )
 
@@ -80,23 +96,28 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.WindowSize = msg
 
+		// Account for header height (header takes 1 line + margin)
+		headerHeight := 2
 		heightDeduction := 6
 		widthDeduction := 2
 
 		styleTitle = styleTitle.Width((msg.Width / 2) - widthDeduction)
 		styleTitleSelected = styleTitleSelected.Width((msg.Width / 2) - widthDeduction)
 
-		m.DecoderTokenTextArea.SetHeight((2 * msg.Height / 3) - heightDeduction)
+		// Adjust available height by subtracting header height
+		availableHeight := msg.Height - headerHeight
+
+		m.DecoderTokenTextArea.SetHeight((2 * availableHeight / 3) - heightDeduction)
 		m.DecoderTokenTextArea.SetWidth((msg.Width / 2) - widthDeduction)
 		m.DecoderTokenTextArea.Focus()
 
-		m.DecoderSecretTextArea.SetHeight((msg.Height / 3) - heightDeduction)
+		m.DecoderSecretTextArea.SetHeight((availableHeight / 3) - heightDeduction)
 		m.DecoderSecretTextArea.SetWidth((msg.Width / 2) - widthDeduction)
 
-		m.DecoderPayloadViewport.SetHeight((2 * msg.Height / 3) - heightDeduction)
+		m.DecoderPayloadViewport.SetHeight((2 * availableHeight / 3) - heightDeduction)
 		m.DecoderPayloadViewport.SetWidth((msg.Width / 2) - widthDeduction)
 
-		m.DecoderHeaderViewport.SetHeight((msg.Height / 3) - heightDeduction)
+		m.DecoderHeaderViewport.SetHeight((availableHeight / 3) - heightDeduction)
 		m.DecoderHeaderViewport.SetWidth((msg.Width / 2) - widthDeduction)
 
 	case tea.KeyMsg:
@@ -156,7 +177,12 @@ func (m BubbleTeaModel) View() tea.View {
 			pane2,
 		)
 
-		v.SetContent(content)
+		fullContent := lipgloss.JoinVertical(lipgloss.Center,
+			m.renderHeader(),
+			content,
+		)
+
+		v.SetContent(fullContent)
 	}
 
 	return v
@@ -206,4 +232,30 @@ func (m BubbleTeaModel) renderPayloadBox() string {
 			m.DecoderPayloadViewport.View(),
 		),
 	)
+}
+
+func (m BubbleTeaModel) renderHeader() string {
+	// Determine which screen is active and format accordingly
+	var decoderText string
+	var encoderText string
+
+	switch m.SelectedScreen {
+	case ScreenJWTDecoder:
+		decoderText = styleActiveScreen.Render("JWT Decoder")
+		encoderText = styleInactiveScreen.Render(" | JWT Encoder")
+	case ScreenJWTEncoder:
+		decoderText = styleInactiveScreen.Render("JWT Decoder")
+		encoderText = styleActiveScreen.Render(" | JWT Encoder")
+	}
+
+	headerContent := decoderText + encoderText
+
+	// Calculate the header width based on the window size, default to 80 if not set
+	headerWidth := 80
+	if m.WindowSize.Width > 0 {
+		headerWidth = m.WindowSize.Width
+	}
+	styleWithWidth := styleHeader.Width(headerWidth)
+
+	return styleWithWidth.Render(headerContent)
 }
