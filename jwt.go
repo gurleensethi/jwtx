@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// JWTDecodeResult holds the result of JWT decoding operation
 type JWTDecodeResult struct {
 	Token            *jwt.Token
 	Error            error
@@ -17,30 +18,40 @@ type JWTDecodeResult struct {
 	IsSignatureValid bool
 }
 
-func (r *JWTDecodeResult) JsonMarshedHeader() string {
+// JsonMarshaledHeader returns the JSON marshaled header of the JWT token
+func (r *JWTDecodeResult) JsonMarshaledHeader() string {
 	if r.Token == nil {
 		return ""
 	}
 
-	v, _ := json.MarshalIndent(r.Token.Header, "", "  ")
+	v, err := json.MarshalIndent(r.Token.Header, "", "  ")
+	if err != nil {
+		return ""
+	}
 
 	return string(v)
 }
 
-func (r *JWTDecodeResult) JsonMarshledClaims() string {
+// JsonMarshaledClaims returns the JSON marshaled claims of the JWT token
+func (r *JWTDecodeResult) JsonMarshaledClaims() string {
 	if r.Token == nil {
 		return ""
 	}
 
-	v, _ := json.MarshalIndent(r.Token.Claims, "", "  ")
+	v, err := json.MarshalIndent(r.Token.Claims, "", "  ")
+	if err != nil {
+		return ""
+	}
 
 	return string(v)
 }
 
+// Valid returns whether the JWT is valid based on token validity and signature verification
 func (r *JWTDecodeResult) Valid() bool {
-	return r.Error != nil && r.IsTokenValid && r.IsSignatureValid
+	return r.Error == nil && r.IsTokenValid && r.IsSignatureValid
 }
 
+// JWTDecodeToken decodes and validates a JWT token using the provided secret
 func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 	parsedToken, err := jwt.Parse(token, jwt.Keyfunc(func(t *jwt.Token) (any, error) {
 		pubKey, err := ParseECDSAPublicKeyFromPEM([]byte(secret))
@@ -69,10 +80,11 @@ func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 	return &result
 }
 
+// ParseECDSAPublicKeyFromPEM attempts to parse an ECDSA public key from PEM format
 func ParseECDSAPublicKeyFromPEM(pemBytes []byte) (any, error) {
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
-		return "", fmt.Errorf("failed to parse PEM block contaning public key")
+		return nil, fmt.Errorf("failed to parse PEM block containing public key")
 	}
 
 	return x509.ParsePKIXPublicKey(block.Bytes)

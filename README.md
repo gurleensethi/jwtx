@@ -27,8 +27,8 @@ jwtx
 
 ### Keyboard Shortcuts
 
-- `Ctrl+1`: Focus on JWT token input field
-- `Ctrl+2`: Focus on secret input field
+- `Ctrl+T`: Focus on JWT token input field
+- `Ctrl+S`: Focus on secret input field
 - `Ctrl+C` or `Ctrl+Q`: Quit the application
 
 ### Interface
