@@ -2,7 +2,7 @@
 
 A terminal-based TUI application for decoding and validating JSON Web Tokens (JWTs).
 
-![Demo](demo.png)
+![Demo](./demo.png)
 
 ## Features
 
