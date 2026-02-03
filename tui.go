@@ -16,8 +16,8 @@ var (
 	ViewJWTEncoder View = "jwt_encoder"
 	ViewJWTDecoder View = "jwt_decoder"
 
-	ElementEncoderJWTTextArea    Element = "el_encoder_jwt_text_area"
-	ElementEncoderSecretTextArea Element = "el_encoder_secret_text_area"
+	ElementDecoderJWTTextArea    Element = "el_encoder_jwt_text_area"
+	ElementDecoderSecretTextArea Element = "el_encoder_secret_text_area"
 
 	styleTitle = lipgloss.NewStyle().
 			MarginBottom(1)
@@ -88,7 +88,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 
 	return BubbleTeaModel{
 		SelectedView:           ViewJWTDecoder,
-		SelectedElement:        ElementEncoderJWTTextArea,
+		SelectedElement:        ElementDecoderJWTTextArea,
 		DecoderTokenTextArea:   decoderTokenTextArea,
 		DecoderSecretTextArea:  decoderSecretTextArea,
 		DecoderHeaderViewport:  decoderHeaderViewport,
@@ -153,11 +153,11 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "ctrl+q":
 			return m, tea.Quit
 		case "ctrl+t":
-			m.SelectedElement = ElementEncoderJWTTextArea
+			m.SelectedElement = ElementDecoderJWTTextArea
 			m.DecoderSecretTextArea.Blur()
 			m.DecoderTokenTextArea.Focus()
 		case "ctrl+s":
-			m.SelectedElement = ElementEncoderSecretTextArea
+			m.SelectedElement = ElementDecoderSecretTextArea
 			m.DecoderTokenTextArea.Blur()
 			m.DecoderSecretTextArea.Focus()
 		}
@@ -220,7 +220,7 @@ func (m BubbleTeaModel) View() tea.View {
 
 func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 	title := styleTitle
-	if m.SelectedElement == ElementEncoderJWTTextArea {
+	if m.SelectedElement == ElementDecoderJWTTextArea {
 		title = styleTitleSelected
 	}
 
@@ -246,7 +246,7 @@ func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 
 func (m BubbleTeaModel) renderSecretBox() string {
 	title := styleTitle
-	if m.SelectedElement == ElementEncoderSecretTextArea {
+	if m.SelectedElement == ElementDecoderSecretTextArea {
 		title = styleTitleSelected
 	}
 
