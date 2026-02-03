@@ -1,0 +1,13 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Run the application in development mode
+    cmds:
+      - go run .
+
+  vhs:
+    desc: Generate the VHS demo
+    cmds:
+      - vhs demo.tape
+    dir: .

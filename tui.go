@@ -152,11 +152,11 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Quit Program
 		case "ctrl+c", "ctrl+q":
 			return m, tea.Quit
-		case "ctrl+1":
+		case "ctrl+t":
 			m.SelectedElement = ElementEncoderJWTTextArea
 			m.DecoderSecretTextArea.Blur()
 			m.DecoderTokenTextArea.Focus()
-		case "ctrl+2":
+		case "ctrl+s":
 			m.SelectedElement = ElementEncoderSecretTextArea
 			m.DecoderTokenTextArea.Blur()
 			m.DecoderSecretTextArea.Focus()
@@ -237,7 +237,7 @@ func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render("JSON WEB TOKEN [ctrl+1]"),
+			title.Render("JSON WEB TOKEN [ctrl+t]"),
 			m.DecoderTokenTextArea.View(),
 			statusBar,
 		),
@@ -263,7 +263,7 @@ func (m BubbleTeaModel) renderSecretBox() string {
 
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render("SECRET [ctrl+2]"),
+			title.Render("SECRET [ctrl+s]"),
 			m.DecoderSecretTextArea.View(),
 			statusBar,
 		),
