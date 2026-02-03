@@ -30,7 +30,7 @@ var (
 	styleHeader = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#ffffff")).
 			Background(lipgloss.Color("#db3fce")).
-			Padding(1, 2).
+			Padding(1, 1).
 			MarginBottom(1).
 			Align(lipgloss.Center).
 			Bold(true)
@@ -44,6 +44,17 @@ var (
 				Background(lipgloss.Color("#db3fce"))
 
 	styleBox = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+
+	styleStatus = lipgloss.NewStyle().
+			Padding(0, 2, 0, 2)
+
+	styleStatusError = styleStatus.
+				Foreground(lipgloss.Color("#ffffff")).
+				Background(lipgloss.Color("#ca4a00"))
+
+	styleStatusSuccess = styleStatus.
+				Foreground(lipgloss.Color("#ffffff")).
+				Background(lipgloss.Color("#008202"))
 
 	styleFooter = lipgloss.NewStyle().
 			Padding(0, 2, 0, 2).
@@ -70,7 +81,10 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderSecretTextArea.ShowLineNumbers = false
 
 	decoderHeaderViewport := viewport.New()
+	decoderHeaderViewport.SoftWrap = true
+
 	decoderPayloadViewport := viewport.New()
+	decoderPayloadViewport.SoftWrap = true
 
 	return BubbleTeaModel{
 		SelectedView:           ViewJWTDecoder,
@@ -93,7 +107,7 @@ type BubbleTeaModel struct {
 	DecoderSecretTextArea  textarea.Model
 	DecoderHeaderViewport  viewport.Model
 	DecoderPayloadViewport viewport.Model
-	DecodeResult           JWTDecodeResult
+	DecodeResult           *JWTDecodeResult
 }
 
 func (m BubbleTeaModel) Init() tea.Cmd {
@@ -155,14 +169,17 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.DecoderSecretTextArea, cmd = m.DecoderSecretTextArea.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.DecodeResult = JWTDecodeToken(m.DecoderTokenTextArea.Value(), m.DecoderSecretTextArea.Value())
+	m.DecodeResult = nil
+	if m.DecoderTokenTextArea.Value() != "" {
+		m.DecodeResult = JWTDecodeToken(m.DecoderTokenTextArea.Value(), m.DecoderSecretTextArea.Value())
 
-	if m.DecodeResult.Token != nil {
-		m.DecoderHeaderViewport.SetContent(m.DecodeResult.JsonMarshedHeader())
-		m.DecoderPayloadViewport.SetContent(m.DecodeResult.JsonMarshledClaims())
-	} else {
-		m.DecoderHeaderViewport.SetContent("")
-		m.DecoderPayloadViewport.SetContent("")
+		if m.DecodeResult.Token != nil {
+			m.DecoderHeaderViewport.SetContent(m.DecodeResult.JsonMarshedHeader())
+			m.DecoderPayloadViewport.SetContent(m.DecodeResult.JsonMarshledClaims())
+		} else {
+			m.DecoderHeaderViewport.SetContent("")
+			m.DecoderPayloadViewport.SetContent("")
+		}
 	}
 
 	return m, nil
@@ -193,7 +210,6 @@ func (m BubbleTeaModel) View() tea.View {
 		fullContent := lipgloss.JoinVertical(lipgloss.Center,
 			m.renderHeader(),
 			content,
-			m.renderFooter(),
 		)
 
 		v.SetContent(fullContent)
@@ -208,10 +224,22 @@ func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 		title = styleTitleSelected
 	}
 
+	width := lipgloss.Width(m.DecoderTokenTextArea.View())
+
+	statusBar := styleStatus.Width(width).Render("")
+	if m.DecodeResult != nil {
+		if m.DecodeResult.IsTokenValid {
+			statusBar = styleStatusSuccess.Width(width).Render("Valid JWT")
+		} else {
+			statusBar = styleStatusError.Width(width).Render("Invalid token")
+		}
+	}
+
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render("JSON WEB TOKEN [ctrl+1]"),
 			m.DecoderTokenTextArea.View(),
+			statusBar,
 		),
 	)
 }
@@ -222,28 +250,50 @@ func (m BubbleTeaModel) renderSecretBox() string {
 		title = styleTitleSelected
 	}
 
+	width := lipgloss.Width(m.DecoderTokenTextArea.View())
+
+	statusBar := styleStatus.Width(width).Render("")
+	if m.DecodeResult != nil {
+		if m.DecodeResult.IsSignatureValid {
+			statusBar = styleStatusSuccess.Width(width).Render("Siganture Verified")
+		} else {
+			statusBar = styleStatusError.Width(width).Render("Siganture verification failed")
+		}
+	}
+
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render("SECRET [ctrl+2]"),
 			m.DecoderSecretTextArea.View(),
+			statusBar,
 		),
 	)
 }
 
 func (m BubbleTeaModel) renderHeaderBox() string {
+	width := lipgloss.Width(m.DecoderHeaderViewport.View())
+
+	statusBar := styleStatus.Width(width).Render("")
+
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			styleTitle.Render("DECODED HEADER"),
 			m.DecoderHeaderViewport.View(),
+			statusBar,
 		),
 	)
 }
 
 func (m BubbleTeaModel) renderPayloadBox() string {
+	width := lipgloss.Width(m.DecoderHeaderViewport.View())
+
+	statusBar := styleStatus.Width(width).Render("")
+
 	return styleBox.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			styleTitle.Render("DECODED PAYLOAD"),
 			m.DecoderPayloadViewport.View(),
+			statusBar,
 		),
 	)
 }
@@ -260,30 +310,4 @@ func (m BubbleTeaModel) renderHeader() string {
 
 	return styleHeader.Width(m.WindowSize.Width).
 		Render(decoderStyle.Render("JWT Decoder") + styleInactiveScreen.Render(" | ") + encoderStyle.Render("JWT Encoder"))
-}
-
-func (m BubbleTeaModel) renderFooter() string {
-	switch m.SelectedView {
-	case ViewJWTDecoder:
-		if m.DecoderTokenTextArea.Value() == "" {
-			return styleFooter.Width(m.WindowSize.Width).Render("")
-		}
-
-		if m.DecodeResult.Error != nil {
-			errMsg := m.DecodeResult.Error.Error()
-
-			switch {
-			case m.DecodeResult.IsTokenInvalid:
-				errMsg = "Unable to parse, token is invalid"
-			case m.DecodeResult.IsSignatureInvalid:
-				errMsg = "Token signature is invalid"
-			}
-
-			return styleFooterError.Width(m.WindowSize.Width).Render(errMsg)
-		}
-
-		return styleFooterSuccess.Width(m.WindowSize.Width).Render("Token is valid")
-	}
-
-	return ""
 }

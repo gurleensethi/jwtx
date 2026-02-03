@@ -1,20 +1,23 @@
 package main
 
 import (
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"fmt"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTDecodeResult struct {
-	Token              *jwt.Token
-	Error              error
-	IsTokenInvalid     bool
-	IsSignatureInvalid bool
+	Token            *jwt.Token
+	Error            error
+	IsTokenValid     bool
+	IsSignatureValid bool
 }
 
-func (r JWTDecodeResult) JsonMarshedHeader() string {
+func (r *JWTDecodeResult) JsonMarshedHeader() string {
 	if r.Token == nil {
 		return ""
 	}
@@ -24,7 +27,7 @@ func (r JWTDecodeResult) JsonMarshedHeader() string {
 	return string(v)
 }
 
-func (r JWTDecodeResult) JsonMarshledClaims() string {
+func (r *JWTDecodeResult) JsonMarshledClaims() string {
 	if r.Token == nil {
 		return ""
 	}
@@ -34,25 +37,43 @@ func (r JWTDecodeResult) JsonMarshledClaims() string {
 	return string(v)
 }
 
-func JWTDecodeToken(token, secret string) JWTDecodeResult {
+func (r *JWTDecodeResult) Valid() bool {
+	return r.Error != nil && r.IsTokenValid && r.IsSignatureValid
+}
+
+func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 	parsedToken, err := jwt.Parse(token, jwt.Keyfunc(func(t *jwt.Token) (any, error) {
-		return []byte(secret), nil
+		pubKey, err := ParseECDSAPublicKeyFromPEM([]byte(secret))
+		if err != nil {
+			return []byte(secret), nil
+		}
+		return pubKey, nil
 	}))
 
 	result := JWTDecodeResult{
-		Token: parsedToken,
-		Error: err,
+		Token:            parsedToken,
+		IsTokenValid:     true,
+		IsSignatureValid: true,
 	}
 
 	if err != nil {
-		if strings.Contains(err.Error(), "token is malformed") {
-			result.IsTokenInvalid = true
-		}
+		result.IsTokenValid = !strings.Contains(err.Error(), "token is malformed")
+		result.IsSignatureValid = !strings.Contains(err.Error(), "token signature is invalid") && result.IsTokenValid
 
-		if strings.Contains(err.Error(), "token signature is invalid") {
-			result.IsSignatureInvalid = true
+		// Unexpected error occurred
+		if result.IsTokenValid && result.IsSignatureValid {
+			result.Error = err
 		}
 	}
 
-	return result
+	return &result
+}
+
+func ParseECDSAPublicKeyFromPEM(pemBytes []byte) (any, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return "", fmt.Errorf("failed to parse PEM block contaning public key")
+	}
+
+	return x509.ParsePKIXPublicKey(block.Bytes)
 }
