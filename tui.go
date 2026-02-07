@@ -26,6 +26,8 @@ const (
 	KeyQuitAlt     = "ctrl+q"
 	KeyFocusToken  = "ctrl+t"
 	KeyFocusSecret = "ctrl+s"
+	KeyAltDown     = "alt+down"
+	KeyAltUp       = "alt+up"
 
 	// Status messages
 	StatusValidJWT                    = "Valid JWT"
@@ -71,7 +73,12 @@ var (
 	styleInactiveScreen = lipgloss.NewStyle().
 				Background(lipgloss.Color("#db3fce"))
 
-	styleBox = lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+	styleBox = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#777777"))
+
+	styleBoxActive = styleBox.Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#ffffff"))
 
 	styleStatus = lipgloss.NewStyle().
 			Padding(0, 2, 0, 2)
@@ -186,8 +193,16 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.DecoderTokenTextArea.Focus()
 		case KeyFocusSecret:
 			m.SelectedElement = ElementDecoderSecretTextArea
-			m.DecoderTokenTextArea.Blur()
-			m.DecoderSecretTextArea.Focus()
+		case KeyAltDown:
+			if m.SelectedElement == ElementDecoderJWTTextArea {
+				m.SelectedElement = ElementDecoderSecretTextArea
+			}
+		case KeyAltUp:
+			if m.SelectedElement == ElementDecoderSecretTextArea {
+				m.SelectedElement = ElementDecoderJWTTextArea
+				m.DecoderTokenTextArea.Blur()
+				m.DecoderSecretTextArea.Focus()
+			}
 		}
 	}
 
@@ -248,8 +263,10 @@ func (m BubbleTeaModel) View() tea.View {
 
 func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 	title := styleTitle
+	box := styleBox
 	if m.SelectedElement == ElementDecoderJWTTextArea {
 		title = styleTitleSelected
+		box = styleBoxActive
 	}
 
 	width := lipgloss.Width(m.DecoderTokenTextArea.View())
@@ -263,7 +280,7 @@ func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 		}
 	}
 
-	return styleBox.Render(
+	return box.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render(TitleJWTToken),
 			m.DecoderTokenTextArea.View(),
@@ -274,8 +291,10 @@ func (m BubbleTeaModel) renderJsonWebTokenBox() string {
 
 func (m BubbleTeaModel) renderSecretBox() string {
 	title := styleTitle
+	box := styleBox
 	if m.SelectedElement == ElementDecoderSecretTextArea {
 		title = styleTitleSelected
+		box = styleBoxActive
 	}
 
 	width := lipgloss.Width(m.DecoderTokenTextArea.View())
@@ -289,7 +308,7 @@ func (m BubbleTeaModel) renderSecretBox() string {
 		}
 	}
 
-	return styleBox.Render(
+	return box.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render(TitleSecret),
 			m.DecoderSecretTextArea.View(),
