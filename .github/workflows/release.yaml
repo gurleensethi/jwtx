@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        type: choice
+        default: minor
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Get next version
+        uses: reecetech/version-increment@2024.10.1
+        id: version
+        with:
+          scheme: semver
+          increment: ${{ inputs.increment }}
+
+      - name: Create git tag
+        run: |
+          NEW_TAG="${{ steps.version.version }}"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
