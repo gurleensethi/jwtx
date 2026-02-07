@@ -33,7 +33,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NEW_TAG="${{ steps.version.version }}"
+          NEW_TAG="${{ steps.version.outputs.version }}"
           git tag $NEW_TAG
           git push origin $NEW_TAG
           gh release create $NEW_TAG --generate-notes
