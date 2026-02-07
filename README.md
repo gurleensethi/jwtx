@@ -1,7 +1,7 @@
 # 🚀 jwtx 🔐
 
 <p align="center">
-  <img src="./demo.png" alt="jwtx demo" width="800"/>
+  <img src="./demo.png" alt="jwtx demo"/>
 </p>
 
 <p align="center">
