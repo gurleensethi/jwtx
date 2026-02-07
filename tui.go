@@ -1,148 +1,40 @@
 package main
 
 import (
-	"image/color"
-
-	"charm.land/bubbles/v2/textarea"
-	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
 
-type View string
-type Element string
-
-const (
-	// View constants
-	ViewJWTEncoder View = "jwt_encoder"
-	ViewJWTDecoder View = "jwt_decoder"
-
-	// Element constants
-	ElementDecoderJWTTextArea    Element = "el_decoder_jwt_text_area"
-	ElementDecoderSecretTextArea Element = "el_decoder_secret_text_area"
-
-	// Keyboard shortcuts
-	KeyQuit        = "ctrl+c"
-	KeyQuitAlt     = "ctrl+q"
-	KeyFocusToken  = "ctrl+t"
-	KeyFocusSecret = "ctrl+s"
-	KeyAltDown     = "alt+down"
-	KeyAltUp       = "alt+up"
-
-	// Status messages
-	StatusValidJWT                    = "Valid JWT"
-	StatusInvalidToken                = "Invalid token"
-	StatusSignatureVerified           = "Signature Verified"
-	StatusSignatureVerificationFailed = "Signature verification failed"
-
-	// Placeholder texts
-	PlaceholderJWT    = "Enter the JSON Web Token (JWT) here..."
-	PlaceholderSecret = "Enter Secret"
-
-	// Box titles
-	TitleJWTToken       = "JSON WEB TOKEN [ctrl+t]"
-	TitleSecret         = "SECRET [ctrl+s]"
-	TitleDecodedHeader  = "DECODED HEADER"
-	TitleDecodedPayload = "DECODED PAYLOAD"
-	TitleDecoder        = "JWT Decoder"
-	TitleEncoder        = "JWT Encoder"
-)
-
-var (
-	styleTitle = lipgloss.NewStyle().
-			MarginBottom(1)
-
-	styleTitleSelected = styleTitle.
-				Bold(true).
-				Background(color.White).
-				Foreground(color.Black)
-
-	styleHeader = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#ffffff")).
-			Background(lipgloss.Color("#db3fce")).
-			Padding(1, 1).
-			MarginBottom(1).
-			Align(lipgloss.Center).
-			Bold(true)
-
-	styleActiveScreen = lipgloss.NewStyle().
-				Bold(true).
-				Underline(true).
-				Background(lipgloss.Color("#db3fce"))
-
-	styleInactiveScreen = lipgloss.NewStyle().
-				Background(lipgloss.Color("#db3fce"))
-
-	styleBox = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#777777"))
-
-	styleBoxActive = styleBox.Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#ffffff"))
-
-	styleStatus = lipgloss.NewStyle().
-			Padding(0, 2, 0, 2)
-
-	styleStatusError = styleStatus.
-				Foreground(lipgloss.Color("#ffffff")).
-				Background(lipgloss.Color("#ca4a00"))
-
-	styleStatusSuccess = styleStatus.
-				Foreground(lipgloss.Color("#ffffff")).
-				Background(lipgloss.Color("#008202"))
-
-	styleFooter = lipgloss.NewStyle().
-			Padding(0, 2, 0, 2).
-			MarginTop(2)
-
-	styleFooterError = styleFooter.
-				Foreground(lipgloss.Color("#ffffff")).
-				Background(lipgloss.Color("#ca4a00"))
-
-	styleFooterSuccess = styleFooter.
-				Foreground(lipgloss.Color("#ffffff")).
-				Background(lipgloss.Color("#008202"))
-)
-
 func NewBubbleTeamModel() BubbleTeaModel {
-	decoderTokenTextArea := textarea.New()
-	decoderTokenTextArea.Placeholder = PlaceholderJWT
-	decoderTokenTextArea.Prompt = ""
-	decoderTokenTextArea.ShowLineNumbers = false
-
-	decoderSecretTextArea := textarea.New()
-	decoderSecretTextArea.Placeholder = PlaceholderSecret
-	decoderSecretTextArea.Prompt = ""
-	decoderSecretTextArea.ShowLineNumbers = false
-
-	decoderHeaderViewport := viewport.New()
-	decoderHeaderViewport.SoftWrap = true
-
-	decoderPayloadViewport := viewport.New()
-	decoderPayloadViewport.SoftWrap = true
+	decoderJWTModel := NewJWTModel()
+	decoderSecretModel := NewSecretModel()
+	decoderHeaderModel := NewHeaderModel()
+	decoderHeaderModel.Title = TitleDecodedHeader
+	decoderPayloadModel := NewPayloadModel()
+	decoderPayloadModel.Title = TitleDecodedPayload
 
 	return BubbleTeaModel{
-		SelectedView:           ViewJWTDecoder,
-		SelectedElement:        ElementDecoderJWTTextArea,
-		DecoderTokenTextArea:   decoderTokenTextArea,
-		DecoderSecretTextArea:  decoderSecretTextArea,
-		DecoderHeaderViewport:  decoderHeaderViewport,
-		DecoderPayloadViewport: decoderPayloadViewport,
+		SelectedView:        ViewJWTDecoder,
+		FocusedElement:      ElementDecoderJWTTextArea,
+		DecoderJWTModel:     decoderJWTModel,
+		DecoderSecretModel:  decoderSecretModel,
+		DecoderHeaderModel:  decoderHeaderModel,
+		DecoderPayloadModel: decoderPayloadModel,
 	}
 }
 
 type BubbleTeaModel struct {
 	WindowSize tea.WindowSizeMsg
 
-	SelectedView    View
-	SelectedElement Element
+	SelectedView   View
+	FocusedElement Element
 
-	// Decoding
-	DecoderTokenTextArea   textarea.Model
-	DecoderSecretTextArea  textarea.Model
-	DecoderHeaderViewport  viewport.Model
-	DecoderPayloadViewport viewport.Model
-	DecodeResult           *JWTDecodeResult
+	// UI Elements
+	DecoderJWTModel     JWTModel
+	DecoderSecretModel  SecretModel
+	DecoderHeaderModel  HeaderModel
+	DecoderPayloadModel PayloadModel
+	DecodeResult        *JWTDecodeResult
 }
 
 func (m BubbleTeaModel) Init() tea.Cmd {
@@ -160,27 +52,29 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Account for header height (header takes 1 line + margin)
 		headerHeight := 2
 		footerHeight := 1
-		heightDeduction := 6
-		widthDeduction := 2
 
-		styleTitle = styleTitle.Width((msg.Width / 2) - widthDeduction)
-		styleTitleSelected = styleTitleSelected.Width((msg.Width / 2) - widthDeduction)
+		styleTitle = styleTitle.Width((msg.Width / 2) - 2)
+		styleTitleSelected = styleTitleSelected.Width((msg.Width / 2) - 2)
 
 		// Adjust available height by subtracting header height
-		availableHeight := msg.Height - headerHeight - footerHeight
+		availableHeight := msg.Height - headerHeight - footerHeight - 3
 
-		m.DecoderTokenTextArea.SetHeight((2 * availableHeight / 3) - heightDeduction)
-		m.DecoderTokenTextArea.SetWidth((msg.Width / 2) - widthDeduction)
-		m.DecoderTokenTextArea.Focus()
+		// Set dimensions for JWT model
+		m.DecoderJWTModel.SetHeight((2 * availableHeight / 3))
+		m.DecoderJWTModel.SetWidth((msg.Width / 2))
+		m.DecoderJWTModel.Focus()
 
-		m.DecoderSecretTextArea.SetHeight((availableHeight / 3) - heightDeduction)
-		m.DecoderSecretTextArea.SetWidth((msg.Width / 2) - widthDeduction)
+		// Set dimensions for secret model
+		m.DecoderSecretModel.SetHeight((availableHeight / 3))
+		m.DecoderSecretModel.SetWidth((msg.Width / 2))
 
-		m.DecoderPayloadViewport.SetHeight((2 * availableHeight / 3) - heightDeduction)
-		m.DecoderPayloadViewport.SetWidth((msg.Width / 2) - widthDeduction)
+		// Set dimensions for payload model
+		m.DecoderPayloadModel.SetHeight((2 * availableHeight / 3))
+		m.DecoderPayloadModel.SetWidth((msg.Width / 2))
 
-		m.DecoderHeaderViewport.SetHeight((availableHeight / 3) - heightDeduction)
-		m.DecoderHeaderViewport.SetWidth((msg.Width / 2) - widthDeduction)
+		// Set dimensions for header model
+		m.DecoderHeaderModel.SetHeight((availableHeight / 3))
+		m.DecoderHeaderModel.SetWidth((msg.Width / 2))
 
 	case tea.KeyMsg:
 		switch msg.Key().String() {
@@ -188,44 +82,48 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case KeyQuit, KeyQuitAlt:
 			return m, tea.Quit
 		case KeyFocusToken:
-			m.SelectedElement = ElementDecoderJWTTextArea
-			m.DecoderSecretTextArea.Blur()
-			m.DecoderTokenTextArea.Focus()
+			m.FocusedElement = ElementDecoderJWTTextArea
+			m.DecoderJWTModel.Focus()
+			m.DecoderSecretModel.Blur()
 		case KeyFocusSecret:
-			m.SelectedElement = ElementDecoderSecretTextArea
-		case KeyAltDown:
-			if m.SelectedElement == ElementDecoderJWTTextArea {
-				m.SelectedElement = ElementDecoderSecretTextArea
-			}
-		case KeyAltUp:
-			if m.SelectedElement == ElementDecoderSecretTextArea {
-				m.SelectedElement = ElementDecoderJWTTextArea
-				m.DecoderTokenTextArea.Blur()
-				m.DecoderSecretTextArea.Focus()
-			}
+			m.FocusedElement = ElementDecoderSecretTextArea
+			m.DecoderSecretModel.Focus()
+			m.DecoderJWTModel.Blur()
 		}
 	}
 
-	m.DecoderTokenTextArea, cmd = m.DecoderTokenTextArea.Update(msg)
+	// Update JWT model
+	m.DecoderJWTModel.Focused = m.FocusedElement == ElementDecoderJWTTextArea
+	m.DecoderJWTModel, cmd = m.DecoderJWTModel.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.DecoderSecretTextArea, cmd = m.DecoderSecretTextArea.Update(msg)
+	// Update secret model
+	m.DecoderSecretModel.Focused = m.FocusedElement == ElementDecoderSecretTextArea
+	m.DecoderSecretModel, cmd = m.DecoderSecretModel.Update(msg)
 	cmds = append(cmds, cmd)
 
+	// Update header and payload models with decode results
 	m.DecodeResult = nil
-	if m.DecoderTokenTextArea.Value() != "" {
-		m.DecodeResult = JWTDecodeToken(m.DecoderTokenTextArea.Value(), m.DecoderSecretTextArea.Value())
+	token := m.DecoderJWTModel.GetToken()
+	secret := m.DecoderSecretModel.GetSecret()
+
+	if token != "" {
+		m.DecodeResult = JWTDecodeToken(token, secret)
+
+		// Update the result in the models
+		m.DecoderJWTModel.Result = m.DecodeResult
+		m.DecoderSecretModel.Result = m.DecodeResult
 
 		if m.DecodeResult.Token != nil {
-			m.DecoderHeaderViewport.SetContent(m.DecodeResult.JsonMarshaledHeader())
-			m.DecoderPayloadViewport.SetContent(m.DecodeResult.JsonMarshaledClaims())
+			m.DecoderHeaderModel.SetData(m.DecodeResult.JsonMarshaledHeader())
+			m.DecoderPayloadModel.SetData(m.DecodeResult.JsonMarshaledClaims())
 		} else {
-			m.DecoderHeaderViewport.SetContent("")
-			m.DecoderPayloadViewport.SetContent("")
+			m.DecoderHeaderModel.SetData("")
+			m.DecoderPayloadModel.SetData("")
 		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m BubbleTeaModel) View() tea.View {
@@ -236,13 +134,13 @@ func (m BubbleTeaModel) View() tea.View {
 	switch m.SelectedView {
 	case ViewJWTDecoder:
 		pane1 := lipgloss.JoinVertical(lipgloss.Left,
-			m.renderJsonWebTokenBox(),
-			m.renderSecretBox(),
+			m.DecoderJWTModel.View(),
+			m.DecoderSecretModel.View(),
 		)
 
 		pane2 := lipgloss.JoinVertical(lipgloss.Left,
-			m.renderPayloadBox(),
-			m.renderHeaderBox(),
+			m.DecoderHeaderModel.View(),
+			m.DecoderPayloadModel.View(),
 		)
 
 		content := lipgloss.JoinHorizontal(lipgloss.Left,
@@ -250,8 +148,20 @@ func (m BubbleTeaModel) View() tea.View {
 			pane2,
 		)
 
+		decoderStyle, encoderStyle := styleInactiveScreen, styleInactiveScreen
+
+		switch m.SelectedView {
+		case ViewJWTDecoder:
+			decoderStyle = styleActiveScreen
+		case ViewJWTEncoder:
+			encoderStyle = styleActiveScreen
+		}
+
+		header := styleHeader.Width(m.WindowSize.Width).
+			Render(decoderStyle.Render(TitleDecoder) + styleInactiveScreen.Render(" | ") + encoderStyle.Render(TitleEncoder))
+
 		fullContent := lipgloss.JoinVertical(lipgloss.Center,
-			m.renderHeader(),
+			header,
 			content,
 		)
 
@@ -259,102 +169,4 @@ func (m BubbleTeaModel) View() tea.View {
 	}
 
 	return v
-}
-
-func (m BubbleTeaModel) renderJsonWebTokenBox() string {
-	title := styleTitle
-	box := styleBox
-	if m.SelectedElement == ElementDecoderJWTTextArea {
-		title = styleTitleSelected
-		box = styleBoxActive
-	}
-
-	width := lipgloss.Width(m.DecoderTokenTextArea.View())
-
-	statusBar := styleStatus.Width(width).Render("")
-	if m.DecodeResult != nil {
-		if m.DecodeResult.IsTokenValid {
-			statusBar = styleStatusSuccess.Width(width).Render(StatusValidJWT)
-		} else {
-			statusBar = styleStatusError.Width(width).Render(StatusInvalidToken)
-		}
-	}
-
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(TitleJWTToken),
-			m.DecoderTokenTextArea.View(),
-			statusBar,
-		),
-	)
-}
-
-func (m BubbleTeaModel) renderSecretBox() string {
-	title := styleTitle
-	box := styleBox
-	if m.SelectedElement == ElementDecoderSecretTextArea {
-		title = styleTitleSelected
-		box = styleBoxActive
-	}
-
-	width := lipgloss.Width(m.DecoderTokenTextArea.View())
-
-	statusBar := styleStatus.Width(width).Render("")
-	if m.DecodeResult != nil {
-		if m.DecodeResult.IsSignatureValid {
-			statusBar = styleStatusSuccess.Width(width).Render(StatusSignatureVerified)
-		} else {
-			statusBar = styleStatusError.Width(width).Render(StatusSignatureVerificationFailed)
-		}
-	}
-
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(TitleSecret),
-			m.DecoderSecretTextArea.View(),
-			statusBar,
-		),
-	)
-}
-
-func (m BubbleTeaModel) renderHeaderBox() string {
-	width := lipgloss.Width(m.DecoderHeaderViewport.View())
-
-	statusBar := styleStatus.Width(width).Render("")
-
-	return styleBox.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			styleTitle.Render(TitleDecodedHeader),
-			m.DecoderHeaderViewport.View(),
-			statusBar,
-		),
-	)
-}
-
-func (m BubbleTeaModel) renderPayloadBox() string {
-	width := lipgloss.Width(m.DecoderHeaderViewport.View())
-
-	statusBar := styleStatus.Width(width).Render("")
-
-	return styleBox.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			styleTitle.Render(TitleDecodedPayload),
-			m.DecoderPayloadViewport.View(),
-			statusBar,
-		),
-	)
-}
-
-func (m BubbleTeaModel) renderHeader() string {
-	decoderStyle, encoderStyle := styleInactiveScreen, styleInactiveScreen
-
-	switch m.SelectedView {
-	case ViewJWTDecoder:
-		decoderStyle = styleActiveScreen
-	case ViewJWTEncoder:
-		encoderStyle = styleActiveScreen
-	}
-
-	return styleHeader.Width(m.WindowSize.Width).
-		Render(decoderStyle.Render(TitleDecoder) + styleInactiveScreen.Render(" | ") + encoderStyle.Render(TitleEncoder))
 }
