@@ -17,12 +17,16 @@ const (
 	// Element constants
 	ElementDecoderJWTTextArea    Element = "el_decoder_jwt_text_area"
 	ElementDecoderSecretTextArea Element = "el_decoder_secret_text_area"
+	ElementDecoderHeaderTextArea Element = "el_decoder_header_text_area"
+	ElementDecoderPayloadTextArea Element = "el_decoder_payload_text_area"
 
 	// Keyboard shortcuts
 	KeyQuit        = "ctrl+c"
 	KeyQuitAlt     = "ctrl+q"
 	KeyFocusToken  = "ctrl+t"
 	KeyFocusSecret = "ctrl+s"
+	KeyFocusHeader = "ctrl+h"
+	KeyFocusPayload = "ctrl+p"
 
 	// Status messages
 	StatusValidJWT                    = "Valid JWT"
@@ -37,8 +41,8 @@ const (
 	// Box titles
 	TitleJWTToken       = "JSON WEB TOKEN [ctrl+t]"
 	TitleSecret         = "SECRET [ctrl+s]"
-	TitleDecodedHeader  = "DECODED HEADER"
-	TitleDecodedPayload = "DECODED PAYLOAD"
+	TitleDecodedHeader  = "DECODED HEADER [ctrl+h]"
+	TitleDecodedPayload = "DECODED PAYLOAD [ctrl+p]"
 	TitleDecoder        = "JWT Decoder"
 	TitleEncoder        = "JWT Encoder"
 )

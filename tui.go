@@ -6,20 +6,20 @@ import (
 )
 
 func NewBubbleTeamModel() BubbleTeaModel {
-	decoderJWTModel := NewJWTModel()
-	decoderSecretModel := NewSecretModel()
-	decoderHeaderModel := NewHeaderModel()
+	decoderJWTModel := NewJWTTokenModel()
+	decoderSecretModel := NewJWTSecretModel()
+	decoderHeaderModel := NewJWTHeaderModel()
 	decoderHeaderModel.Title = TitleDecodedHeader
-	decoderPayloadModel := NewPayloadModel()
+	decoderPayloadModel := NewJWTPayloadModel()
 	decoderPayloadModel.Title = TitleDecodedPayload
 
 	return BubbleTeaModel{
-		SelectedView:        ViewJWTDecoder,
-		FocusedElement:      ElementDecoderJWTTextArea,
-		DecoderJWTModel:     decoderJWTModel,
-		DecoderSecretModel:  decoderSecretModel,
-		DecoderHeaderModel:  decoderHeaderModel,
-		DecoderPayloadModel: decoderPayloadModel,
+		SelectedView:           ViewJWTDecoder,
+		FocusedElement:         ElementDecoderJWTTextArea,
+		DecoderJWTModel:        decoderJWTModel,
+		DecoderSecretModel:     decoderSecretModel,
+		DecoderJWTHeaderModel:  decoderHeaderModel,
+		DecoderJWTPayloadModel: decoderPayloadModel,
 	}
 }
 
@@ -30,11 +30,11 @@ type BubbleTeaModel struct {
 	FocusedElement Element
 
 	// UI Elements
-	DecoderJWTModel     JWTModel
-	DecoderSecretModel  SecretModel
-	DecoderHeaderModel  HeaderModel
-	DecoderPayloadModel PayloadModel
-	DecodeResult        *JWTDecodeResult
+	DecoderJWTModel        JWTTokenModel
+	DecoderSecretModel     JWTSecretModel
+	DecoderJWTHeaderModel  JWTHeaderModel
+	DecoderJWTPayloadModel JWTPayloadModel
+	DecodeResult           *JWTDecodeResult
 }
 
 func (m BubbleTeaModel) Init() tea.Cmd {
@@ -69,12 +69,12 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.DecoderSecretModel.SetWidth((msg.Width / 2))
 
 		// Set dimensions for payload model
-		m.DecoderPayloadModel.SetHeight((2 * availableHeight / 3))
-		m.DecoderPayloadModel.SetWidth((msg.Width / 2))
+		m.DecoderJWTPayloadModel.SetHeight((2 * availableHeight / 3))
+		m.DecoderJWTPayloadModel.SetWidth((msg.Width / 2))
 
 		// Set dimensions for header model
-		m.DecoderHeaderModel.SetHeight((availableHeight / 3))
-		m.DecoderHeaderModel.SetWidth((msg.Width / 2))
+		m.DecoderJWTHeaderModel.SetHeight((availableHeight / 3))
+		m.DecoderJWTHeaderModel.SetWidth((msg.Width / 2))
 
 	case tea.KeyMsg:
 		switch msg.Key().String() {
@@ -85,10 +85,26 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.FocusedElement = ElementDecoderJWTTextArea
 			m.DecoderJWTModel.Focus()
 			m.DecoderSecretModel.Blur()
+			m.DecoderJWTHeaderModel.Blur()
+			m.DecoderJWTPayloadModel.Blur()
 		case KeyFocusSecret:
 			m.FocusedElement = ElementDecoderSecretTextArea
 			m.DecoderSecretModel.Focus()
 			m.DecoderJWTModel.Blur()
+			m.DecoderJWTHeaderModel.Blur()
+			m.DecoderJWTPayloadModel.Blur()
+		case KeyFocusHeader:
+			m.FocusedElement = ElementDecoderHeaderTextArea
+			m.DecoderJWTHeaderModel.Focus()
+			m.DecoderJWTModel.Blur()
+			m.DecoderSecretModel.Blur()
+			m.DecoderJWTPayloadModel.Blur()
+		case KeyFocusPayload:
+			m.FocusedElement = ElementDecoderPayloadTextArea
+			m.DecoderJWTPayloadModel.Focus()
+			m.DecoderJWTModel.Blur()
+			m.DecoderSecretModel.Blur()
+			m.DecoderJWTHeaderModel.Blur()
 		}
 	}
 
@@ -100,6 +116,16 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update secret model
 	m.DecoderSecretModel.Focused = m.FocusedElement == ElementDecoderSecretTextArea
 	m.DecoderSecretModel, cmd = m.DecoderSecretModel.Update(msg)
+	cmds = append(cmds, cmd)
+
+	// Update header model
+	m.DecoderJWTHeaderModel.Focused = m.FocusedElement == ElementDecoderHeaderTextArea
+	m.DecoderJWTHeaderModel, cmd = m.DecoderJWTHeaderModel.Update(msg)
+	cmds = append(cmds, cmd)
+
+	// Update payload model
+	m.DecoderJWTPayloadModel.Focused = m.FocusedElement == ElementDecoderPayloadTextArea
+	m.DecoderJWTPayloadModel, cmd = m.DecoderJWTPayloadModel.Update(msg)
 	cmds = append(cmds, cmd)
 
 	// Update header and payload models with decode results
@@ -115,11 +141,11 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.DecoderSecretModel.Result = m.DecodeResult
 
 		if m.DecodeResult.Token != nil {
-			m.DecoderHeaderModel.SetData(m.DecodeResult.JsonMarshaledHeader())
-			m.DecoderPayloadModel.SetData(m.DecodeResult.JsonMarshaledClaims())
+			m.DecoderJWTHeaderModel.SetData(m.DecodeResult.JsonMarshaledHeader())
+			m.DecoderJWTPayloadModel.SetData(m.DecodeResult.JsonMarshaledClaims())
 		} else {
-			m.DecoderHeaderModel.SetData("")
-			m.DecoderPayloadModel.SetData("")
+			m.DecoderJWTHeaderModel.SetData("")
+			m.DecoderJWTPayloadModel.SetData("")
 		}
 	}
 
@@ -139,8 +165,8 @@ func (m BubbleTeaModel) View() tea.View {
 		)
 
 		pane2 := lipgloss.JoinVertical(lipgloss.Left,
-			m.DecoderHeaderModel.View(),
-			m.DecoderPayloadModel.View(),
+			m.DecoderJWTHeaderModel.View(),
+			m.DecoderJWTPayloadModel.View(),
 		)
 
 		content := lipgloss.JoinHorizontal(lipgloss.Left,
