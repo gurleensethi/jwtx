@@ -29,6 +29,8 @@ jobs:
           increment: ${{ inputs.increment }}
 
       - name: Create git tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           NEW_TAG="${{ steps.version.version }}"
           git tag $NEW_TAG
