@@ -121,6 +121,8 @@ func (m JWTTokenModel) IsEditing() bool {
 	return m.EditingMode
 }
 
+// ================================================================================
+
 // JWTSecretModel represents the secret field that can be in input or output mode
 type JWTSecretModel struct {
 	TextArea    textarea.Model
@@ -237,6 +239,8 @@ func (m JWTSecretModel) IsEditing() bool {
 	return m.EditingMode
 }
 
+// ================================================================================
+
 // JWTHeaderModel represents the header display that can be in input or output mode
 type JWTHeaderModel struct {
 	Viewport    viewport.Model
@@ -304,11 +308,7 @@ func (m JWTHeaderModel) View() string {
 func (m *JWTHeaderModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
-	internalHeight := height - 4
-	if internalHeight < 1 {
-		internalHeight = 1
-	}
-	m.Viewport.SetHeight(internalHeight)
+	m.Viewport.SetHeight(max(height-4, 1))
 }
 
 // SetWidth sets the width of the viewport
@@ -342,6 +342,8 @@ func (m *JWTHeaderModel) Focus() {
 func (m *JWTHeaderModel) Blur() {
 	m.Focused = false
 }
+
+// ================================================================================
 
 // JWTPayloadModel represents the payload display that can be in input or output mode
 type JWTPayloadModel struct {

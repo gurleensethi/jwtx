@@ -1,6 +1,8 @@
 package main
 
 import (
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
@@ -12,6 +14,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderHeaderModel.Title = TitleDecodedHeader
 	decoderPayloadModel := NewJWTPayloadModel()
 	decoderPayloadModel.Title = TitleDecodedPayload
+	decoderHelpModel := help.New()
 
 	return BubbleTeaModel{
 		SelectedView:           ViewJWTDecoder,
@@ -20,6 +23,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 		DecoderSecretModel:     decoderSecretModel,
 		DecoderJWTHeaderModel:  decoderHeaderModel,
 		DecoderJWTPayloadModel: decoderPayloadModel,
+		HelpModel:              decoderHelpModel,
 	}
 }
 
@@ -35,6 +39,8 @@ type BubbleTeaModel struct {
 	DecoderJWTHeaderModel  JWTHeaderModel
 	DecoderJWTPayloadModel JWTPayloadModel
 	DecodeResult           *JWTDecodeResult
+
+	HelpModel help.Model
 }
 
 func (m BubbleTeaModel) Init() tea.Cmd {
@@ -49,32 +55,30 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.WindowSize = msg
 
-		// Account for header height (header takes 1 line + margin)
 		headerHeight := 2
 		footerHeight := 1
 
 		styleTitle = styleTitle.Width((msg.Width / 2) - 2)
 		styleTitleSelected = styleTitleSelected.Width((msg.Width / 2) - 2)
 
-		// Adjust available height by subtracting header height
-		availableHeight := msg.Height - headerHeight - footerHeight - 3
+		// Available height is less than total height becayse we need to account
+		// for header and footer.
+		availableHeight := msg.Height - headerHeight - footerHeight - 5
 
-		// Set dimensions for JWT model
-		m.DecoderJWTModel.SetHeight((2 * availableHeight / 3))
+		m.DecoderJWTModel.SetHeight((availableHeight / 2))
 		m.DecoderJWTModel.SetWidth((msg.Width / 2))
 		m.DecoderJWTModel.Focus()
 
-		// Set dimensions for secret model
-		m.DecoderSecretModel.SetHeight((availableHeight / 3))
+		m.DecoderSecretModel.SetHeight((availableHeight / 2))
 		m.DecoderSecretModel.SetWidth((msg.Width / 2))
 
-		// Set dimensions for payload model
-		m.DecoderJWTPayloadModel.SetHeight((2 * availableHeight / 3))
+		m.DecoderJWTPayloadModel.SetHeight((availableHeight / 2))
 		m.DecoderJWTPayloadModel.SetWidth((msg.Width / 2))
 
-		// Set dimensions for header model
-		m.DecoderJWTHeaderModel.SetHeight((availableHeight / 3))
+		m.DecoderJWTHeaderModel.SetHeight((availableHeight / 2))
 		m.DecoderJWTHeaderModel.SetWidth((msg.Width / 2))
+
+		m.HelpModel.SetWidth(msg.Width)
 
 	case tea.KeyMsg:
 		switch msg.Key().String() {
@@ -186,13 +190,35 @@ func (m BubbleTeaModel) View() tea.View {
 		header := styleHeader.Width(m.WindowSize.Width).
 			Render(decoderStyle.Render(TitleDecoder) + styleInactiveScreen.Render(" | ") + encoderStyle.Render(TitleEncoder))
 
-		fullContent := lipgloss.JoinVertical(lipgloss.Center,
+		footer := lipgloss.NewStyle().Padding(0, 1, 0, 1).MarginTop(1).Render(m.HelpModel.View(m))
+
+		fullContent := lipgloss.JoinVertical(lipgloss.Left,
 			header,
 			content,
+			footer,
 		)
 
 		v.SetContent(fullContent)
 	}
 
 	return v
+}
+
+func (m BubbleTeaModel) ShortHelp() []key.Binding {
+	switch m.SelectedView {
+	case ViewJWTDecoder:
+		return []key.Binding{
+			key.NewBinding(key.WithKeys(KeyQuit, KeyQuitAlt), key.WithHelp(KeyQuit, "Quit")),
+			key.NewBinding(key.WithKeys(KeyFocusToken), key.WithHelp(KeyFocusToken, "Focus Token")),
+			key.NewBinding(key.WithKeys(KeyFocusSecret), key.WithHelp(KeyFocusSecret, "Focus Secret")),
+			key.NewBinding(key.WithKeys(KeyFocusHeader), key.WithHelp(KeyFocusHeader, "Focus Header")),
+			key.NewBinding(key.WithKeys(KeyFocusPayload), key.WithHelp(KeyFocusPayload, "Focus Payload")),
+		}
+	}
+
+	return []key.Binding{}
+}
+
+func (m BubbleTeaModel) FullHelp() [][]key.Binding {
+	return [][]key.Binding{}
 }
