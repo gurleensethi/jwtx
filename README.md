@@ -1,4 +1,4 @@
-# 🚀 jwtx - JWT Terminal Explorer 🔐
+# 🚀 jwtx 🔐
 
 <p align="center">
   <img src="./demo.png" alt="jwtx demo" width="800"/>
