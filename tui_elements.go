@@ -10,11 +10,14 @@ import (
 // JWTTokenModel represents the JWT token field that can be in input or output mode
 type JWTTokenModel struct {
 	TextArea    textarea.Model
+	Viewport    viewport.Model
 	Focused     bool
-	Result      *JWTDecodeResult
+	ElementID   Element
 	EditingMode bool
 	Height      int
 	Width       int
+	Error       string
+	Content     string
 }
 
 // NewJWTModel creates a new JWT model
@@ -24,13 +27,19 @@ func NewJWTTokenModel() JWTTokenModel {
 	textArea.Prompt = ""
 	textArea.ShowLineNumbers = false
 
+	viewportModel := viewport.New()
+	viewportModel.SoftWrap = true
+
 	return JWTTokenModel{
 		TextArea:    textArea,
+		Viewport:    viewportModel,
 		Focused:     false,
-		Result:      nil,
+		ElementID:   "",
 		EditingMode: true, // Default to editing mode,
 		Height:      0,
 		Width:       0,
+		Error:       "",
+		Content:     "",
 	}
 }
 
@@ -42,7 +51,30 @@ func (m JWTTokenModel) Init() tea.Cmd {
 // Update handles messages for the JWT model
 func (m JWTTokenModel) Update(msg tea.Msg) (JWTTokenModel, tea.Cmd) {
 	var cmd tea.Cmd
-	m.TextArea, cmd = m.TextArea.Update(msg)
+
+	switch msg := msg.(type) {
+	case FocusElementMsg:
+		// Handle focus command
+		if msg.Element == m.ElementID {
+			m.Focused = true
+			if m.EditingMode {
+				m.TextArea.Focus()
+			}
+		} else {
+			m.Focused = false
+			if m.EditingMode {
+				m.TextArea.Blur()
+			}
+		}
+		return m, nil
+	default:
+		if m.EditingMode {
+			m.TextArea, cmd = m.TextArea.Update(msg)
+		} else {
+			m.Viewport, cmd = m.Viewport.Update(msg)
+		}
+	}
+
 	return m, cmd
 }
 
@@ -56,24 +88,27 @@ func (m JWTTokenModel) View() string {
 	}
 
 	statusBar := styleStatus.Width(m.Width).Render("")
-	if m.Result != nil {
-		if m.Result.IsTokenValid {
-			statusBar = styleStatusSuccess.Width(m.Width).Render(StatusValidJWT)
-		} else {
-			statusBar = styleStatusError.Width(m.Width).Render(StatusInvalidToken)
-		}
+	if m.Error != "" {
+		statusBar = styleStatusError.Width(m.Width).Render(m.Error)
+	}
+
+	var content string
+	if m.EditingMode {
+		content = m.TextArea.View()
+	} else {
+		content = m.Viewport.View()
 	}
 
 	return box.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render(TitleJWTToken),
-			m.TextArea.View(),
+			content,
 			statusBar,
 		),
 	)
 }
 
-// SetHeight sets the height of the text area
+// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTTokenModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
@@ -81,34 +116,64 @@ func (m *JWTTokenModel) SetHeight(height int) {
 	if internalHeight < 1 {
 		internalHeight = 1
 	}
-	m.TextArea.SetHeight(internalHeight)
+	if m.EditingMode {
+		m.TextArea.SetHeight(internalHeight)
+	} else {
+		m.Viewport.SetHeight(internalHeight)
+	}
 }
 
-// SetWidth sets the width of the text area
+// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTTokenModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
-	m.TextArea.SetWidth(width - 2)
-}
-
-// GetToken returns the current token value
-func (m JWTTokenModel) GetToken() string {
-	return m.TextArea.Value()
+	if m.EditingMode {
+		m.TextArea.SetWidth(width - 2)
+	} else {
+		m.Viewport.SetWidth(width - 2)
+	}
 }
 
 // SetToken sets the token value
 func (m *JWTTokenModel) SetToken(token string) {
-	m.TextArea.SetValue(token)
+	m.Content = token
+	if m.EditingMode {
+		m.TextArea.SetValue(token)
+	} else {
+		m.Viewport.SetContent(token)
+	}
 }
 
-// Focus focuses the text area
-func (m *JWTTokenModel) Focus() {
-	m.TextArea.Focus()
+// GetToken returns the current token value
+func (m JWTTokenModel) GetToken() string {
+	if m.EditingMode {
+		return m.TextArea.Value()
+	} else {
+		return m.Content
+	}
 }
 
-// Blur blurs the text area
+// GetTokenText returns the token text regardless of mode
+func (m JWTTokenModel) GetTokenText() string {
+	if m.EditingMode {
+		return m.TextArea.Value()
+	} else {
+		return m.Content
+	}
+}
+
+// SetError sets the error message for the model
+func (m *JWTTokenModel) SetError(error string) {
+	m.Error = error
+}
+
+// Blur blurs the text area or viewport based on editing mode
 func (m *JWTTokenModel) Blur() {
-	m.TextArea.Blur()
+	if m.EditingMode {
+		m.TextArea.Blur()
+	} else {
+		// For viewport, no blur needed
+	}
 }
 
 // SetEditingMode sets whether the model is in editing mode
@@ -127,10 +192,11 @@ func (m JWTTokenModel) IsEditing() bool {
 type JWTSecretModel struct {
 	TextArea    textarea.Model
 	Focused     bool
-	Result      *JWTDecodeResult
+	ElementID   Element
 	EditingMode bool
 	Height      int
 	Width       int
+	Error       string
 }
 
 // NewSecretModel creates a new secret model
@@ -143,10 +209,11 @@ func NewJWTSecretModel() JWTSecretModel {
 	return JWTSecretModel{
 		TextArea:    textArea,
 		Focused:     false,
-		Result:      nil,
+		ElementID:   "",
 		EditingMode: true, // Default to editing mode
 		Height:      0,
 		Width:       0,
+		Error:       "",
 	}
 }
 
@@ -158,7 +225,22 @@ func (m JWTSecretModel) Init() tea.Cmd {
 // Update handles messages for the secret model
 func (m JWTSecretModel) Update(msg tea.Msg) (JWTSecretModel, tea.Cmd) {
 	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case FocusElementMsg:
+		// Handle focus command
+		if msg.Element == m.ElementID {
+			m.Focused = true
+			m.TextArea.Focus()
+		} else {
+			m.Focused = false
+			m.TextArea.Blur()
+		}
+		return m, nil
+	}
+
 	m.TextArea, cmd = m.TextArea.Update(msg)
+
 	return m, cmd
 }
 
@@ -174,12 +256,8 @@ func (m JWTSecretModel) View() string {
 	width := lipgloss.Width(m.TextArea.View())
 
 	statusBar := styleStatus.Width(width).Render("")
-	if m.Result != nil {
-		if m.Result.IsSignatureValid {
-			statusBar = styleStatusSuccess.Width(width).Render(StatusSignatureVerified)
-		} else {
-			statusBar = styleStatusError.Width(width).Render(StatusSignatureVerificationFailed)
-		}
+	if m.Error != "" {
+		statusBar = styleStatusError.Width(width).Render(m.Error)
 	}
 
 	return box.Render(
@@ -219,11 +297,6 @@ func (m *JWTSecretModel) SetSecret(secret string) {
 	m.TextArea.SetValue(secret)
 }
 
-// Focus focuses the text area
-func (m *JWTSecretModel) Focus() {
-	m.TextArea.Focus()
-}
-
 // Blur blurs the text area
 func (m *JWTSecretModel) Blur() {
 	m.TextArea.Blur()
@@ -239,30 +312,48 @@ func (m JWTSecretModel) IsEditing() bool {
 	return m.EditingMode
 }
 
+// SetError sets the error message for the model
+func (m *JWTSecretModel) SetError(error string) {
+	m.Error = error
+}
+
 // ================================================================================
 
 // JWTHeaderModel represents the header display that can be in input or output mode
 type JWTHeaderModel struct {
+	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Title       string
 	EditingMode bool
 	Focused     bool
+	ElementID   Element
 	Height      int
 	Width       int
+	Error       string
+	Content     string
 }
 
 // NewHeaderModel creates a new header model
 func NewJWTHeaderModel() JWTHeaderModel {
+	textArea := textarea.New()
+	textArea.Placeholder = "Enter header JSON here..."
+	textArea.Prompt = ""
+	textArea.ShowLineNumbers = false
+
 	viewportModel := viewport.New()
 	viewportModel.SoftWrap = true
 
 	return JWTHeaderModel{
+		TextArea:    textArea,
 		Viewport:    viewportModel,
 		Title:       "",
-		EditingMode: false, // Default to viewing mode
+		EditingMode: true, // Default to editing mode for encoder
 		Focused:     false,
+		ElementID:   "",
 		Height:      0,
 		Width:       0,
+		Error:       "",
+		Content:     "",
 	}
 }
 
@@ -273,12 +364,29 @@ func (m JWTHeaderModel) Init() tea.Cmd {
 
 // Update handles messages for the header model
 func (m JWTHeaderModel) Update(msg tea.Msg) (JWTHeaderModel, tea.Cmd) {
-	if !m.Focused {
+	switch msg := msg.(type) {
+	case FocusElementMsg:
+		// Handle focus command
+		if msg.Element == m.ElementID {
+			m.Focused = true
+			if m.EditingMode {
+				m.TextArea.Focus()
+			}
+		} else {
+			m.Focused = false
+			if m.EditingMode {
+				m.TextArea.Blur()
+			}
+		}
 		return m, nil
 	}
 
 	var cmd tea.Cmd
-	m.Viewport, cmd = m.Viewport.Update(msg)
+	if m.Focused && m.EditingMode {
+		m.TextArea, cmd = m.TextArea.Update(msg)
+	} else if m.Focused && !m.EditingMode {
+		m.Viewport, cmd = m.Viewport.Update(msg)
+	}
 	return m, cmd
 }
 
@@ -291,36 +399,72 @@ func (m JWTHeaderModel) View() string {
 		box = styleBoxActive
 	}
 
-	width := lipgloss.Width(m.Viewport.View())
+	var content string
+	if m.EditingMode {
+		content = m.TextArea.View()
+	} else {
+		content = m.Viewport.View()
+	}
+
+	width := lipgloss.Width(content)
 
 	statusBar := styleStatus.Width(width).Render("")
+	if m.Error != "" {
+		statusBar = styleStatusError.Width(width).Render(m.Error)
+	}
 
 	return box.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render(m.Title),
-			m.Viewport.View(),
+			content,
 			statusBar,
 		),
 	)
 }
 
-// SetHeight sets the height of the viewport
+// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTHeaderModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
-	m.Viewport.SetHeight(max(height-4, 1))
+	internalHeight := height - 4
+	if internalHeight < 1 {
+		internalHeight = 1
+	}
+	if m.EditingMode {
+		m.TextArea.SetHeight(internalHeight)
+	} else {
+		m.Viewport.SetHeight(internalHeight)
+	}
 }
 
-// SetWidth sets the width of the viewport
+// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTHeaderModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
-	m.Viewport.SetWidth(width - 2)
+	if m.EditingMode {
+		m.TextArea.SetWidth(width - 2)
+	} else {
+		m.Viewport.SetWidth(width - 2)
+	}
 }
 
-// SetData sets the content of the viewport
+// SetData sets the content of the viewport or text area based on editing mode
 func (m *JWTHeaderModel) SetData(content string) {
-	m.Viewport.SetContent(content)
+	m.Content = content
+	if m.EditingMode {
+		m.TextArea.SetValue(content)
+	} else {
+		m.Viewport.SetContent(content)
+	}
+}
+
+// GetData gets the content of the viewport or text area based on editing mode
+func (m JWTHeaderModel) GetData() string {
+	if m.EditingMode {
+		return m.TextArea.Value()
+	} else {
+		return m.Content
+	}
 }
 
 // SetEditingMode sets whether the model is in editing mode
@@ -333,40 +477,56 @@ func (m JWTHeaderModel) IsEditing() bool {
 	return m.EditingMode
 }
 
-// Focus focuses the header model
-func (m *JWTHeaderModel) Focus() {
-	m.Focused = true
+// SetError sets the error message for the model
+func (m *JWTHeaderModel) SetError(error string) {
+	m.Error = error
 }
 
 // Blur blurs the header model
 func (m *JWTHeaderModel) Blur() {
 	m.Focused = false
+	if m.EditingMode {
+		m.TextArea.Blur()
+	}
 }
 
 // ================================================================================
 
 // JWTPayloadModel represents the payload display that can be in input or output mode
 type JWTPayloadModel struct {
+	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Title       string
 	EditingMode bool
 	Focused     bool
+	ElementID   Element
 	Height      int
 	Width       int
+	Error       string
+	Content     string
 }
 
 // NewPayloadModel creates a new payload model
 func NewJWTPayloadModel() JWTPayloadModel {
+	textArea := textarea.New()
+	textArea.Placeholder = "Enter payload JSON here..."
+	textArea.Prompt = ""
+	textArea.ShowLineNumbers = false
+
 	viewportModel := viewport.New()
 	viewportModel.SoftWrap = true
 
 	return JWTPayloadModel{
+		TextArea:    textArea,
 		Viewport:    viewportModel,
 		Title:       "",
-		EditingMode: false, // Default to viewing mode
+		EditingMode: true, // Default to editing mode for encoder
 		Focused:     false,
+		ElementID:   "",
 		Height:      0,
 		Width:       0,
+		Error:       "",
+		Content:     "",
 	}
 }
 
@@ -377,12 +537,29 @@ func (m JWTPayloadModel) Init() tea.Cmd {
 
 // Update handles messages for the payload model
 func (m JWTPayloadModel) Update(msg tea.Msg) (JWTPayloadModel, tea.Cmd) {
-	if !m.Focused {
+	switch msg := msg.(type) {
+	case FocusElementMsg:
+		// Handle focus command
+		if msg.Element == m.ElementID {
+			m.Focused = true
+			if m.EditingMode {
+				m.TextArea.Focus()
+			}
+		} else {
+			m.Focused = false
+			if m.EditingMode {
+				m.TextArea.Blur()
+			}
+		}
 		return m, nil
 	}
 
 	var cmd tea.Cmd
-	m.Viewport, cmd = m.Viewport.Update(msg)
+	if m.Focused && m.EditingMode {
+		m.TextArea, cmd = m.TextArea.Update(msg)
+	} else if m.Focused && !m.EditingMode {
+		m.Viewport, cmd = m.Viewport.Update(msg)
+	}
 	return m, cmd
 }
 
@@ -395,55 +572,85 @@ func (m JWTPayloadModel) View() string {
 		box = styleBoxActive
 	}
 
-	width := lipgloss.Width(m.Viewport.View())
+	var content string
+	if m.EditingMode {
+		content = m.TextArea.View()
+	} else {
+		content = m.Viewport.View()
+	}
+
+	width := lipgloss.Width(content)
 
 	statusBar := styleStatus.Width(width).Render("")
+	if m.Error != "" {
+		statusBar = styleStatusError.Width(width).Render(m.Error)
+	}
 
 	return box.Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			title.Render(m.Title),
-			m.Viewport.View(),
+			content,
 			statusBar,
 		),
 	)
 }
 
-// SetHeight sets the height of the viewport
+// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTPayloadModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
 	internalHeight := max(height-4, 1)
-	m.Viewport.SetHeight(internalHeight)
+
+	if m.EditingMode {
+		m.TextArea.SetHeight(internalHeight)
+	} else {
+		m.Viewport.SetHeight(internalHeight)
+	}
 }
 
-// SetWidth sets the width of the viewport
+// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTPayloadModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
-	m.Viewport.SetWidth(width - 2)
+	if m.EditingMode {
+		m.TextArea.SetWidth(width - 2)
+	} else {
+		m.Viewport.SetWidth(width - 2)
+	}
 }
 
-// SetData sets the content of the viewport
 func (m *JWTPayloadModel) SetData(content string) {
-	m.Viewport.SetContent(content)
+	m.Content = content
+	if m.EditingMode {
+		m.TextArea.SetValue(content)
+	} else {
+		m.Viewport.SetContent(content)
+	}
 }
 
-// SetEditingMode sets whether the model is in editing mode
+func (m JWTPayloadModel) GetData() string {
+	if m.EditingMode {
+		return m.TextArea.Value()
+	} else {
+		return m.Content
+	}
+}
+
 func (m *JWTPayloadModel) SetEditingMode(editing bool) {
 	m.EditingMode = editing
 }
 
-// IsEditing returns whether the model is in editing mode
 func (m JWTPayloadModel) IsEditing() bool {
 	return m.EditingMode
 }
 
-// Focus focuses the payload model
-func (m *JWTPayloadModel) Focus() {
-	m.Focused = true
+func (m *JWTPayloadModel) SetError(error string) {
+	m.Error = error
 }
 
-// Blur blurs the payload model
 func (m *JWTPayloadModel) Blur() {
 	m.Focused = false
+	if m.EditingMode {
+		m.TextArea.Blur()
+	}
 }

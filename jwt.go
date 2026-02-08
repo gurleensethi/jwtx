@@ -89,3 +89,63 @@ func ParseECDSAPublicKeyFromPEM(pemBytes []byte) (any, error) {
 
 	return x509.ParsePKIXPublicKey(block.Bytes)
 }
+
+// JWTEncodeResult holds the result of JWT encoding operation
+type JWTEncodeResult struct {
+	Token        string
+	HeaderError  string
+	PayloadError string
+	SigningError string
+}
+
+// JWTEncodeToken encodes a JWT token using the provided header, payload, and secret
+func JWTEncodeToken(header map[string]interface{}, claims jwt.MapClaims, secret string) *JWTEncodeResult {
+	result := &JWTEncodeResult{}
+
+	// Determine signing method from header
+	var signingMethod jwt.SigningMethod
+	if alg, ok := header["alg"]; ok {
+		if algStr, ok := alg.(string); ok {
+			switch algStr {
+			case "HS256":
+				signingMethod = jwt.SigningMethodHS256
+			case "HS384":
+				signingMethod = jwt.SigningMethodHS384
+			case "HS512":
+				signingMethod = jwt.SigningMethodHS512
+			case "RS256":
+				signingMethod = jwt.SigningMethodRS256
+			case "RS384":
+				signingMethod = jwt.SigningMethodRS384
+			case "RS512":
+				signingMethod = jwt.SigningMethodRS512
+			default:
+				signingMethod = jwt.SigningMethodHS256 // default fallback
+			}
+		} else {
+			signingMethod = jwt.SigningMethodHS256 // default fallback
+		}
+	} else {
+		signingMethod = jwt.SigningMethodHS256 // default fallback
+	}
+
+	// Create token
+	token := jwt.NewWithClaims(signingMethod, claims)
+
+	// Set header values
+	for k, v := range header {
+		if k != "alg" && k != "typ" { // Don't override alg and typ
+			token.Header[k] = v
+		}
+	}
+
+	// Sign and get the complete encoded token as a string
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		result.SigningError = "Error signing token: " + err.Error()
+		return result
+	}
+
+	result.Token = tokenString
+	return result
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 
+	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
 
@@ -19,6 +20,10 @@ const (
 	ElementDecoderSecretTextArea  Element = "el_decoder_secret_text_area"
 	ElementDecoderHeaderTextArea  Element = "el_decoder_header_text_area"
 	ElementDecoderPayloadTextArea Element = "el_decoder_payload_text_area"
+	ElementEncoderHeaderTextArea  Element = "el_encoder_header_text_area"
+	ElementEncoderPayloadTextArea Element = "el_encoder_payload_text_area"
+	ElementEncoderSecretTextArea  Element = "el_encoder_secret_text_area"
+	ElementEncoderJWTTextArea     Element = "el_encoder_jwt_text_area"
 
 	// Keyboard shortcuts
 	KeyQuit         = "ctrl+c"
@@ -27,6 +32,7 @@ const (
 	KeyFocusSecret  = "ctrl+s"
 	KeyFocusHeader  = "ctrl+h"
 	KeyFocusPayload = "ctrl+p"
+	KeySwitchView   = "ctrl+\\"
 
 	// Status messages
 	StatusValidJWT                    = "Valid JWT"
@@ -43,6 +49,8 @@ const (
 	TitleSecret         = "SECRET (ctrl+s)"
 	TitleDecodedHeader  = "DECODED HEADER (ctrl+h)"
 	TitleDecodedPayload = "DECODED PAYLOAD (ctrl+p)"
+	TitleEncoderHeader  = "HEADER (ctrl+h)"
+	TitleEncoderPayload = "PAYLOAD (ctrl+p)"
 	TitleDecoder        = "JWT Decoder"
 	TitleEncoder        = "JWT Encoder"
 )
@@ -102,3 +110,15 @@ var (
 				Foreground(lipgloss.Color("#ffffff")).
 				Background(lipgloss.Color("#008202"))
 )
+
+// FocusElementMsg is a message to focus a specific element
+type FocusElementMsg struct {
+	Element Element
+}
+
+// FocusElementCmd creates a command to focus a specific element
+func FocusElementCmd(element Element) tea.Cmd {
+	return func() tea.Msg {
+		return FocusElementMsg{Element: element}
+	}
+}
