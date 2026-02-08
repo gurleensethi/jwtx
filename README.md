@@ -25,7 +25,7 @@
 
 ## ✨ Features
 
-- 🛠️ **Real-time JWT Decoding** - Instantly decode JWT tokens as you type
+- 🛠️ **Real-time JWT Decoding/Encoding** - Instantly decode/encode JWT tokens as you type
 - 🎨 **Beautiful TUI Interface** - Clean, intuitive terminal interface
 - ⌨️ **Keyboard Navigation** - Full keyboard control with shortcuts
 - 🔍 **Header & Payload Inspection** - View both header and payload separately
@@ -58,7 +58,11 @@ Simply run the application and start exploring JWT tokens:
 jwtx
 ```
 
-Then paste your JWT token in the **JSON WEB TOKEN** field and your secret in the **SECRET** field. The decoded header and payload will appear instantly!
+The application has two views: **Decoder** (default) and **Encoder**. Use `Ctrl+\` to switch between them.
+
+**Decoder View**: Paste your JWT token in the **JSON WEB TOKEN** field and your secret in the **SECRET** field. The decoded header and payload will appear instantly!
+
+**Encoder View**: Enter your header and payload in JSON format, along with the signing secret. The encoded JWT will be generated automatically!
 
 ## ⌨️ Keyboard Shortcuts
 
@@ -66,8 +70,9 @@ Then paste your JWT token in the **JSON WEB TOKEN** field and your secret in the
 |----------|--------|
 | `Ctrl + T` | Focus on JWT Token field |
 | `Ctrl + S` | Focus on Secret field |
-| `Ctrl + H` | Focus on Decoded Header |
-| `Ctrl + P` | Focus on Decoded Payload |
+| `Ctrl + H` | Focus on Header |
+| `Ctrl + P` | Focus on Payload |
+| `Ctrl + \` | Switch between Decoder and Encoder views |
 | `Ctrl + C` | Quit application |
 | `Ctrl + Q` | Alternative quit |
 
