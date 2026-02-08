@@ -10,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// JWTDecodeResult holds the result of JWT decoding operation
 type JWTDecodeResult struct {
 	Token            *jwt.Token
 	Error            error
@@ -18,7 +17,6 @@ type JWTDecodeResult struct {
 	IsSignatureValid bool
 }
 
-// JsonMarshaledHeader returns the JSON marshaled header of the JWT token
 func (r *JWTDecodeResult) JsonMarshaledHeader() string {
 	if r.Token == nil {
 		return ""
@@ -32,7 +30,6 @@ func (r *JWTDecodeResult) JsonMarshaledHeader() string {
 	return string(v)
 }
 
-// JsonMarshaledClaims returns the JSON marshaled claims of the JWT token
 func (r *JWTDecodeResult) JsonMarshaledClaims() string {
 	if r.Token == nil {
 		return ""
@@ -46,12 +43,10 @@ func (r *JWTDecodeResult) JsonMarshaledClaims() string {
 	return string(v)
 }
 
-// Valid returns whether the JWT is valid based on token validity and signature verification
 func (r *JWTDecodeResult) Valid() bool {
 	return r.Error == nil && r.IsTokenValid && r.IsSignatureValid
 }
 
-// JWTDecodeToken decodes and validates a JWT token using the provided secret
 func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 	parsedToken, err := jwt.Parse(token, jwt.Keyfunc(func(t *jwt.Token) (any, error) {
 		pubKey, err := ParseECDSAPublicKeyFromPEM([]byte(secret))
@@ -71,7 +66,6 @@ func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 		result.IsTokenValid = !strings.Contains(err.Error(), "token is malformed")
 		result.IsSignatureValid = !strings.Contains(err.Error(), "token signature is invalid") && result.IsTokenValid
 
-		// Unexpected error occurred
 		if result.IsTokenValid && result.IsSignatureValid {
 			result.Error = err
 		}
@@ -80,7 +74,6 @@ func JWTDecodeToken(token, secret string) *JWTDecodeResult {
 	return &result
 }
 
-// ParseECDSAPublicKeyFromPEM attempts to parse an ECDSA public key from PEM format
 func ParseECDSAPublicKeyFromPEM(pemBytes []byte) (any, error) {
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
@@ -90,7 +83,6 @@ func ParseECDSAPublicKeyFromPEM(pemBytes []byte) (any, error) {
 	return x509.ParsePKIXPublicKey(block.Bytes)
 }
 
-// JWTEncodeResult holds the result of JWT encoding operation
 type JWTEncodeResult struct {
 	Token        string
 	HeaderError  string
@@ -98,11 +90,9 @@ type JWTEncodeResult struct {
 	SigningError string
 }
 
-// JWTEncodeToken encodes a JWT token using the provided header, payload, and secret
 func JWTEncodeToken(header map[string]interface{}, claims jwt.MapClaims, secret string) *JWTEncodeResult {
 	result := &JWTEncodeResult{}
 
-	// Determine signing method from header
 	var signingMethod jwt.SigningMethod
 	if alg, ok := header["alg"]; ok {
 		if algStr, ok := alg.(string); ok {
@@ -129,17 +119,14 @@ func JWTEncodeToken(header map[string]interface{}, claims jwt.MapClaims, secret 
 		signingMethod = jwt.SigningMethodHS256 // default fallback
 	}
 
-	// Create token
 	token := jwt.NewWithClaims(signingMethod, claims)
 
-	// Set header values
 	for k, v := range header {
 		if k != "alg" && k != "typ" { // Don't override alg and typ
 			token.Header[k] = v
 		}
 	}
 
-	// Sign and get the complete encoded token as a string
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		result.SigningError = "Error signing token: " + err.Error()

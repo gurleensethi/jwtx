@@ -7,7 +7,6 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-// JWTTokenModel represents the JWT token field that can be in input or output mode
 type JWTTokenModel struct {
 	TextArea    textarea.Model
 	Viewport    viewport.Model
@@ -20,7 +19,6 @@ type JWTTokenModel struct {
 	Content     string
 }
 
-// NewJWTModel creates a new JWT model
 func NewJWTTokenModel() JWTTokenModel {
 	textArea := textarea.New()
 	textArea.Placeholder = PlaceholderJWT
@@ -43,18 +41,15 @@ func NewJWTTokenModel() JWTTokenModel {
 	}
 }
 
-// Init initializes the JWT model
 func (m JWTTokenModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles messages for the JWT model
 func (m JWTTokenModel) Update(msg tea.Msg) (JWTTokenModel, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
 	case FocusElementMsg:
-		// Handle focus command
 		if msg.Element == m.ElementID {
 			m.Focused = true
 			if m.EditingMode {
@@ -78,7 +73,6 @@ func (m JWTTokenModel) Update(msg tea.Msg) (JWTTokenModel, tea.Cmd) {
 	return m, cmd
 }
 
-// View renders the JWT model
 func (m JWTTokenModel) View() string {
 	title := styleTitle
 	box := styleBox
@@ -108,7 +102,6 @@ func (m JWTTokenModel) View() string {
 	)
 }
 
-// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTTokenModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
@@ -123,7 +116,6 @@ func (m *JWTTokenModel) SetHeight(height int) {
 	}
 }
 
-// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTTokenModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
@@ -134,7 +126,6 @@ func (m *JWTTokenModel) SetWidth(width int) {
 	}
 }
 
-// SetToken sets the token value
 func (m *JWTTokenModel) SetToken(token string) {
 	m.Content = token
 	if m.EditingMode {
@@ -144,7 +135,6 @@ func (m *JWTTokenModel) SetToken(token string) {
 	}
 }
 
-// GetToken returns the current token value
 func (m JWTTokenModel) GetToken() string {
 	if m.EditingMode {
 		return m.TextArea.Value()
@@ -153,7 +143,6 @@ func (m JWTTokenModel) GetToken() string {
 	}
 }
 
-// GetTokenText returns the token text regardless of mode
 func (m JWTTokenModel) GetTokenText() string {
 	if m.EditingMode {
 		return m.TextArea.Value()
@@ -162,12 +151,10 @@ func (m JWTTokenModel) GetTokenText() string {
 	}
 }
 
-// SetError sets the error message for the model
 func (m *JWTTokenModel) SetError(error string) {
 	m.Error = error
 }
 
-// Blur blurs the text area or viewport based on editing mode
 func (m *JWTTokenModel) Blur() {
 	if m.EditingMode {
 		m.TextArea.Blur()
@@ -176,19 +163,16 @@ func (m *JWTTokenModel) Blur() {
 	}
 }
 
-// SetEditingMode sets whether the model is in editing mode
 func (m *JWTTokenModel) SetEditingMode(editing bool) {
 	m.EditingMode = editing
 }
 
-// IsEditing returns whether the model is in editing mode
 func (m JWTTokenModel) IsEditing() bool {
 	return m.EditingMode
 }
 
 // ================================================================================
 
-// JWTSecretModel represents the secret field that can be in input or output mode
 type JWTSecretModel struct {
 	TextArea    textarea.Model
 	Focused     bool
@@ -199,7 +183,6 @@ type JWTSecretModel struct {
 	Error       string
 }
 
-// NewSecretModel creates a new secret model
 func NewJWTSecretModel() JWTSecretModel {
 	textArea := textarea.New()
 	textArea.Placeholder = PlaceholderSecret
@@ -217,18 +200,15 @@ func NewJWTSecretModel() JWTSecretModel {
 	}
 }
 
-// Init initializes the secret model
 func (m JWTSecretModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles messages for the secret model
 func (m JWTSecretModel) Update(msg tea.Msg) (JWTSecretModel, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
 	case FocusElementMsg:
-		// Handle focus command
 		if msg.Element == m.ElementID {
 			m.Focused = true
 			m.TextArea.Focus()
@@ -244,7 +224,6 @@ func (m JWTSecretModel) Update(msg tea.Msg) (JWTSecretModel, tea.Cmd) {
 	return m, cmd
 }
 
-// View renders the secret model
 func (m JWTSecretModel) View() string {
 	title := styleTitle
 	box := styleBox
@@ -269,7 +248,6 @@ func (m JWTSecretModel) View() string {
 	)
 }
 
-// SetHeight sets the height of the text area
 func (m *JWTSecretModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
@@ -280,46 +258,38 @@ func (m *JWTSecretModel) SetHeight(height int) {
 	m.TextArea.SetHeight(internalHeight)
 }
 
-// SetWidth sets the width of the text area
 func (m *JWTSecretModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
 	m.TextArea.SetWidth(width - 2)
 }
 
-// GetSecret returns the current secret value
 func (m JWTSecretModel) GetSecret() string {
 	return m.TextArea.Value()
 }
 
-// SetSecret sets the secret value
-func (m *JWTSecretModel) SetSecret(secret string) {
+func (m JWTSecretModel) SetSecret(secret string) {
 	m.TextArea.SetValue(secret)
 }
 
-// Blur blurs the text area
 func (m *JWTSecretModel) Blur() {
 	m.TextArea.Blur()
 }
 
-// SetEditingMode sets whether the model is in editing mode
 func (m *JWTSecretModel) SetEditingMode(editing bool) {
 	m.EditingMode = editing
 }
 
-// IsEditing returns whether the model is in editing mode
 func (m JWTSecretModel) IsEditing() bool {
 	return m.EditingMode
 }
 
-// SetError sets the error message for the model
 func (m *JWTSecretModel) SetError(error string) {
 	m.Error = error
 }
 
 // ================================================================================
 
-// JWTHeaderModel represents the header display that can be in input or output mode
 type JWTHeaderModel struct {
 	TextArea    textarea.Model
 	Viewport    viewport.Model
@@ -333,7 +303,6 @@ type JWTHeaderModel struct {
 	Content     string
 }
 
-// NewHeaderModel creates a new header model
 func NewJWTHeaderModel() JWTHeaderModel {
 	textArea := textarea.New()
 	textArea.Placeholder = "Enter header JSON here..."
@@ -357,16 +326,13 @@ func NewJWTHeaderModel() JWTHeaderModel {
 	}
 }
 
-// Init initializes the header model
 func (m JWTHeaderModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles messages for the header model
 func (m JWTHeaderModel) Update(msg tea.Msg) (JWTHeaderModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case FocusElementMsg:
-		// Handle focus command
 		if msg.Element == m.ElementID {
 			m.Focused = true
 			if m.EditingMode {
@@ -390,7 +356,6 @@ func (m JWTHeaderModel) Update(msg tea.Msg) (JWTHeaderModel, tea.Cmd) {
 	return m, cmd
 }
 
-// View renders the header model
 func (m JWTHeaderModel) View() string {
 	title := styleTitle
 	box := styleBox
@@ -422,7 +387,6 @@ func (m JWTHeaderModel) View() string {
 	)
 }
 
-// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTHeaderModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
@@ -437,7 +401,6 @@ func (m *JWTHeaderModel) SetHeight(height int) {
 	}
 }
 
-// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTHeaderModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)
@@ -448,7 +411,6 @@ func (m *JWTHeaderModel) SetWidth(width int) {
 	}
 }
 
-// SetData sets the content of the viewport or text area based on editing mode
 func (m *JWTHeaderModel) SetData(content string) {
 	m.Content = content
 	if m.EditingMode {
@@ -458,7 +420,6 @@ func (m *JWTHeaderModel) SetData(content string) {
 	}
 }
 
-// GetData gets the content of the viewport or text area based on editing mode
 func (m JWTHeaderModel) GetData() string {
 	if m.EditingMode {
 		return m.TextArea.Value()
@@ -467,22 +428,18 @@ func (m JWTHeaderModel) GetData() string {
 	}
 }
 
-// SetEditingMode sets whether the model is in editing mode
 func (m *JWTHeaderModel) SetEditingMode(editing bool) {
 	m.EditingMode = editing
 }
 
-// IsEditing returns whether the model is in editing mode
 func (m JWTHeaderModel) IsEditing() bool {
 	return m.EditingMode
 }
 
-// SetError sets the error message for the model
 func (m *JWTHeaderModel) SetError(error string) {
 	m.Error = error
 }
 
-// Blur blurs the header model
 func (m *JWTHeaderModel) Blur() {
 	m.Focused = false
 	if m.EditingMode {
@@ -492,7 +449,6 @@ func (m *JWTHeaderModel) Blur() {
 
 // ================================================================================
 
-// JWTPayloadModel represents the payload display that can be in input or output mode
 type JWTPayloadModel struct {
 	TextArea    textarea.Model
 	Viewport    viewport.Model
@@ -506,7 +462,6 @@ type JWTPayloadModel struct {
 	Content     string
 }
 
-// NewPayloadModel creates a new payload model
 func NewJWTPayloadModel() JWTPayloadModel {
 	textArea := textarea.New()
 	textArea.Placeholder = "Enter payload JSON here..."
@@ -530,16 +485,13 @@ func NewJWTPayloadModel() JWTPayloadModel {
 	}
 }
 
-// Init initializes the payload model
 func (m JWTPayloadModel) Init() tea.Cmd {
 	return nil
 }
 
-// Update handles messages for the payload model
 func (m JWTPayloadModel) Update(msg tea.Msg) (JWTPayloadModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case FocusElementMsg:
-		// Handle focus command
 		if msg.Element == m.ElementID {
 			m.Focused = true
 			if m.EditingMode {
@@ -563,7 +515,6 @@ func (m JWTPayloadModel) Update(msg tea.Msg) (JWTPayloadModel, tea.Cmd) {
 	return m, cmd
 }
 
-// View renders the payload model
 func (m JWTPayloadModel) View() string {
 	title := styleTitle
 	box := styleBox
@@ -595,7 +546,6 @@ func (m JWTPayloadModel) View() string {
 	)
 }
 
-// SetHeight sets the height of the text area or viewport based on editing mode
 func (m *JWTPayloadModel) SetHeight(height int) {
 	m.Height = height
 	// Account for title, borders, and status bar (typically 3-4 lines total)
@@ -608,7 +558,6 @@ func (m *JWTPayloadModel) SetHeight(height int) {
 	}
 }
 
-// SetWidth sets the width of the text area or viewport based on editing mode
 func (m *JWTPayloadModel) SetWidth(width int) {
 	m.Width = width - 2
 	// Account for borders (typically 2 columns total)

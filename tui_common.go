@@ -11,11 +11,9 @@ type View string
 type Element string
 
 const (
-	// View constants
 	ViewJWTEncoder View = "jwt_encoder"
 	ViewJWTDecoder View = "jwt_decoder"
 
-	// Element constants
 	ElementDecoderJWTTextArea     Element = "el_decoder_jwt_text_area"
 	ElementDecoderSecretTextArea  Element = "el_decoder_secret_text_area"
 	ElementDecoderHeaderTextArea  Element = "el_decoder_header_text_area"
@@ -25,7 +23,6 @@ const (
 	ElementEncoderSecretTextArea  Element = "el_encoder_secret_text_area"
 	ElementEncoderJWTTextArea     Element = "el_encoder_jwt_text_area"
 
-	// Keyboard shortcuts
 	KeyQuit         = "ctrl+c"
 	KeyQuitAlt      = "ctrl+q"
 	KeyFocusToken   = "ctrl+j"
@@ -34,17 +31,14 @@ const (
 	KeyFocusPayload = "ctrl+p"
 	KeySwitchView   = "ctrl+\\"
 
-	// Status messages
 	StatusValidJWT                    = "Valid JWT"
 	StatusInvalidToken                = "Invalid token"
 	StatusSignatureVerified           = "Signature Verified"
 	StatusSignatureVerificationFailed = "Signature verification failed"
 
-	// Placeholder texts
 	PlaceholderJWT    = "Enter the JSON Web Token (JWT) here..."
 	PlaceholderSecret = "Enter Secret"
 
-	// Box titles
 	TitleJWTToken       = "JSON WEB TOKEN (ctrl+j)"
 	TitleSecret         = "SECRET (ctrl+s)"
 	TitleDecodedHeader  = "DECODED HEADER (ctrl+h)"
@@ -111,12 +105,10 @@ var (
 				Background(lipgloss.Color("#008202"))
 )
 
-// FocusElementMsg is a message to focus a specific element
 type FocusElementMsg struct {
 	Element Element
 }
 
-// FocusElementCmd creates a command to focus a specific element
 func FocusElementCmd(element Element) tea.Cmd {
 	return func() tea.Msg {
 		return FocusElementMsg{Element: element}
