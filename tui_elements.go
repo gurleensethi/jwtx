@@ -5,9 +5,11 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 type JWTTokenModel struct {
+	ID          string
 	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Focused     bool
@@ -19,7 +21,7 @@ type JWTTokenModel struct {
 	Content     string
 }
 
-func NewJWTTokenModel() JWTTokenModel {
+func NewJWTTokenModel(id string) JWTTokenModel {
 	textArea := textarea.New()
 	textArea.Placeholder = PlaceholderJWT
 	textArea.Prompt = ""
@@ -29,6 +31,7 @@ func NewJWTTokenModel() JWTTokenModel {
 	viewportModel.SoftWrap = true
 
 	return JWTTokenModel{
+		ID:          id,
 		TextArea:    textArea,
 		Viewport:    viewportModel,
 		Focused:     false,
@@ -93,11 +96,14 @@ func (m JWTTokenModel) View() string {
 		content = m.Viewport.View()
 	}
 
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(TitleJWTToken),
-			content,
-			statusBar,
+	return zone.Mark(
+		m.ID,
+		box.Render(
+			lipgloss.JoinVertical(lipgloss.Left,
+				title.Render(TitleJWTToken),
+				content,
+				statusBar,
+			),
 		),
 	)
 }

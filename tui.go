@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/golang-jwt/jwt/v5"
+	zone "github.com/lrstanley/bubblezone/v2"
 
 	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/key"
@@ -12,7 +13,7 @@ import (
 )
 
 func NewBubbleTeamModel() BubbleTeaModel {
-	decoderJWTModel := NewJWTTokenModel()
+	decoderJWTModel := NewJWTTokenModel("decoder-jwt-token")
 	decoderJWTModel.ElementID = ElementDecoderJWTTextArea
 	decoderSecretModel := NewJWTSecretModel()
 	decoderSecretModel.ElementID = ElementDecoderSecretTextArea
@@ -23,7 +24,7 @@ func NewBubbleTeamModel() BubbleTeaModel {
 	decoderPayloadModel.ElementID = ElementDecoderPayloadTextArea
 	decoderPayloadModel.Title = TitleDecodedPayload
 
-	encoderJWTModel := NewJWTTokenModel()
+	encoderJWTModel := NewJWTTokenModel("encoder-jwt-token")
 	encoderJWTModel.ElementID = ElementEncoderJWTTextArea
 	encoderJWTModel.SetEditingMode(false) // In encoder view, JWT is output
 	encoderSecretModel := NewJWTSecretModel()
@@ -173,8 +174,21 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, FocusElementCmd(m.FocusedElement)
 			}
 		}
+	case tea.MouseReleaseMsg:
+		if msg.Button == tea.MouseLeft {
+			switch m.SelectedView {
+			case ViewJWTDecoder:
+				switch {
+				case zone.Get("decoder-jwt-token").InBounds(msg):
+					m.FocusedElement = ElementDecoderJWTTextArea
+					return m, FocusElementCmd(m.FocusedElement)
+				}
+			case ViewJWTEncoder:
+			}
+		}
 	}
 
+	// Pass update msg to relevant models based on selected view.
 	switch m.SelectedView {
 	case ViewJWTDecoder:
 		m.DecoderJWTModel, cmd = m.DecoderJWTModel.Update(msg)
@@ -281,6 +295,7 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m BubbleTeaModel) View() tea.View {
 	v := tea.View{
 		AltScreen: true,
+		MouseMode: tea.MouseModeCellMotion,
 	}
 
 	var content string
@@ -338,7 +353,7 @@ func (m BubbleTeaModel) View() tea.View {
 		footer,
 	)
 
-	v.SetContent(fullContent)
+	v.SetContent(zone.Scan(fullContent))
 
 	return v
 }
