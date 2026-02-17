@@ -9,7 +9,7 @@ import (
 )
 
 type JWTTokenModel struct {
-	ID          string
+	ZoneID      string
 	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Focused     bool
@@ -21,7 +21,7 @@ type JWTTokenModel struct {
 	Content     string
 }
 
-func NewJWTTokenModel(id string) JWTTokenModel {
+func NewJWTTokenModel() JWTTokenModel {
 	textArea := textarea.New()
 	textArea.Placeholder = PlaceholderJWT
 	textArea.Prompt = ""
@@ -31,7 +31,6 @@ func NewJWTTokenModel(id string) JWTTokenModel {
 	viewportModel.SoftWrap = true
 
 	return JWTTokenModel{
-		ID:          id,
 		TextArea:    textArea,
 		Viewport:    viewportModel,
 		Focused:     false,
@@ -97,7 +96,7 @@ func (m JWTTokenModel) View() string {
 	}
 
 	return zone.Mark(
-		m.ID,
+		m.ZoneID,
 		box.Render(
 			lipgloss.JoinVertical(lipgloss.Left,
 				title.Render(TitleJWTToken),
@@ -180,6 +179,7 @@ func (m JWTTokenModel) IsEditing() bool {
 // ================================================================================
 
 type JWTSecretModel struct {
+	ZoneID      string
 	TextArea    textarea.Model
 	Focused     bool
 	ElementID   Element
@@ -245,11 +245,14 @@ func (m JWTSecretModel) View() string {
 		statusBar = styleStatusError.Width(width).Render(m.Error)
 	}
 
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(TitleSecret),
-			m.TextArea.View(),
-			statusBar,
+	return zone.Mark(
+		m.ZoneID,
+		box.Render(
+			lipgloss.JoinVertical(lipgloss.Left,
+				title.Render(TitleSecret),
+				m.TextArea.View(),
+				statusBar,
+			),
 		),
 	)
 }
@@ -297,6 +300,7 @@ func (m *JWTSecretModel) SetError(error string) {
 // ================================================================================
 
 type JWTHeaderModel struct {
+	ZoneID      string
 	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Title       string
@@ -384,11 +388,14 @@ func (m JWTHeaderModel) View() string {
 		statusBar = styleStatusError.Width(width).Render(m.Error)
 	}
 
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(m.Title),
-			content,
-			statusBar,
+	return zone.Mark(
+		m.ZoneID,
+		box.Render(
+			lipgloss.JoinVertical(lipgloss.Left,
+				title.Render(m.Title),
+				content,
+				statusBar,
+			),
 		),
 	)
 }
@@ -456,6 +463,7 @@ func (m *JWTHeaderModel) Blur() {
 // ================================================================================
 
 type JWTPayloadModel struct {
+	ZoneID      string
 	TextArea    textarea.Model
 	Viewport    viewport.Model
 	Title       string
@@ -543,11 +551,14 @@ func (m JWTPayloadModel) View() string {
 		statusBar = styleStatusError.Width(width).Render(m.Error)
 	}
 
-	return box.Render(
-		lipgloss.JoinVertical(lipgloss.Left,
-			title.Render(m.Title),
-			content,
-			statusBar,
+	return zone.Mark(
+		m.ZoneID,
+		box.Render(
+			lipgloss.JoinVertical(lipgloss.Left,
+				title.Render(m.Title),
+				content,
+				statusBar,
+			),
 		),
 	)
 }

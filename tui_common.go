@@ -23,6 +23,15 @@ const (
 	ElementEncoderSecretTextArea  Element = "el_encoder_secret_text_area"
 	ElementEncoderJWTTextArea     Element = "el_encoder_jwt_text_area"
 
+	ZoneDecoderJWTTextArea     = "decoder-jwt-token"
+	ZoneDecoderSecretTextArea  = "decoder-secret-text-area"
+	ZoneDecoderHeaderTextArea  = "decoder-header-text-area"
+	ZoneDecoderPayloadTextArea = "decoder-payload-text-area"
+	ZoneEncoderJWTTextArea     = "encoder-jwt-token"
+	ZoneEncoderSecretTextArea  = "encoder-secret-text-area"
+	ZoneEncoderHeaderTextArea  = "encoder-header-text-area"
+	ZoneEncoderPayloadTextArea = "encoder-payload-text-area"
+
 	KeyQuit         = "ctrl+c"
 	KeyQuitAlt      = "ctrl+q"
 	KeyFocusToken   = "ctrl+j"
