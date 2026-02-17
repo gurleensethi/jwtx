@@ -28,6 +28,7 @@
 - 🛠️ **Real-time JWT Decoding/Encoding** - Instantly decode/encode JWT tokens as you type
 - 🎨 **Beautiful TUI Interface** - Clean, intuitive terminal interface
 - ⌨️ **Keyboard Navigation** - Full keyboard control with shortcuts
+- 🖱️ **Mouse Support** - Click on any input box to focus it directly
 - 🔍 **Header & Payload Inspection** - View both header and payload separately
 - 🛡️ **Signature Verification** - Validate JWT signatures with your secret
 - 📱 **Responsive Layout** - Automatically adapts to your terminal size
