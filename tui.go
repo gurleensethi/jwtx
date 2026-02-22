@@ -394,19 +394,11 @@ func (m BubbleTeaModel) ShortHelp() []key.Binding {
 	case ViewJWTDecoder:
 		return []key.Binding{
 			key.NewBinding(key.WithKeys(KeyQuit, KeyQuitAlt), key.WithHelp(KeyQuit, "Quit")),
-			key.NewBinding(key.WithKeys(KeyFocusToken), key.WithHelp(KeyFocusToken, "Focus Token")),
-			key.NewBinding(key.WithKeys(KeyFocusSecret), key.WithHelp(KeyFocusSecret, "Focus Secret")),
-			key.NewBinding(key.WithKeys(KeyFocusHeader), key.WithHelp(KeyFocusHeader, "Focus Header")),
-			key.NewBinding(key.WithKeys(KeyFocusPayload), key.WithHelp(KeyFocusPayload, "Focus Payload")),
 			key.NewBinding(key.WithKeys(KeySwitchView), key.WithHelp(KeySwitchView, "Switch to Encoder")),
 		}
 	case ViewJWTEncoder:
 		return []key.Binding{
 			key.NewBinding(key.WithKeys(KeyQuit, KeyQuitAlt), key.WithHelp(KeyQuit, "Quit")),
-			key.NewBinding(key.WithKeys(KeyFocusHeader), key.WithHelp(KeyFocusHeader, "Focus Header")),
-			key.NewBinding(key.WithKeys(KeyFocusPayload), key.WithHelp(KeyFocusPayload, "Focus Payload")),
-			key.NewBinding(key.WithKeys(KeyFocusSecret), key.WithHelp(KeyFocusSecret, "Focus Secret")),
-			key.NewBinding(key.WithKeys(KeyFocusToken), key.WithHelp(KeyFocusToken, "Focus JWT")),
 			key.NewBinding(key.WithKeys(KeySwitchView), key.WithHelp(KeySwitchView, "Switch to Decoder")),
 		}
 	}
