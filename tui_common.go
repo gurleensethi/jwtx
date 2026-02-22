@@ -50,6 +50,18 @@ const (
 )
 
 var (
+	// List of all elements
+	Elements = []Element{
+		ElementDecoderJWTTextArea,
+		ElementDecoderSecretTextArea,
+		ElementDecoderHeaderTextArea,
+		ElementDecoderPayloadTextArea,
+		ElementEncoderHeaderTextArea,
+		ElementEncoderPayloadTextArea,
+		ElementEncoderSecretTextArea,
+		ElementEncoderJWTTextArea,
+	}
+
 	styleTitle = lipgloss.NewStyle().
 			MarginBottom(1)
 

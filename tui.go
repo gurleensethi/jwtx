@@ -176,36 +176,10 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.MouseReleaseMsg:
 		if msg.Button == tea.MouseLeft {
-			switch m.SelectedView {
-			case ViewJWTDecoder:
-				switch {
-				case zone.Get(string(ElementDecoderJWTTextArea)).InBounds(msg):
-					m.FocusedElement = ElementDecoderJWTTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementDecoderSecretTextArea)).InBounds(msg):
-					m.FocusedElement = ElementDecoderSecretTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementDecoderHeaderTextArea)).InBounds(msg):
-					m.FocusedElement = ElementDecoderHeaderTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementDecoderPayloadTextArea)).InBounds(msg):
-					m.FocusedElement = ElementDecoderPayloadTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				}
-			case ViewJWTEncoder:
-				switch {
-				case zone.Get(string(ElementEncoderHeaderTextArea)).InBounds(msg):
-					m.FocusedElement = ElementEncoderHeaderTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementEncoderPayloadTextArea)).InBounds(msg):
-					m.FocusedElement = ElementEncoderPayloadTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementEncoderSecretTextArea)).InBounds(msg):
-					m.FocusedElement = ElementEncoderSecretTextArea
-					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(string(ElementEncoderJWTTextArea)).InBounds(msg):
-					m.FocusedElement = ElementEncoderJWTTextArea
-					return m, FocusElementCmd(m.FocusedElement)
+			for _, el := range Elements {
+				if zone.Get(string(el)).InBounds(msg) {
+					m.FocusedElement = el
+					return m, FocusElementCmd(el)
 				}
 			}
 		}
