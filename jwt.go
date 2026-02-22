@@ -10,6 +10,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+var signingMethods = map[string]jwt.SigningMethod{
+	"HS256": jwt.SigningMethodHS256,
+	"HS384": jwt.SigningMethodHS384,
+	"HS512": jwt.SigningMethodHS512,
+	"RS256": jwt.SigningMethodRS256,
+	"RS384": jwt.SigningMethodRS384,
+	"RS512": jwt.SigningMethodRS512,
+}
+
 type JWTDecodeResult struct {
 	Token            *jwt.Token
 	Error            error
@@ -93,30 +102,13 @@ type JWTEncodeResult struct {
 func JWTEncodeToken(header map[string]interface{}, claims jwt.MapClaims, secret string) *JWTEncodeResult {
 	result := &JWTEncodeResult{}
 
-	var signingMethod jwt.SigningMethod
+	var signingMethod jwt.SigningMethod = jwt.SigningMethodHS256
 	if alg, ok := header["alg"]; ok {
 		if algStr, ok := alg.(string); ok {
-			switch algStr {
-			case "HS256":
-				signingMethod = jwt.SigningMethodHS256
-			case "HS384":
-				signingMethod = jwt.SigningMethodHS384
-			case "HS512":
-				signingMethod = jwt.SigningMethodHS512
-			case "RS256":
-				signingMethod = jwt.SigningMethodRS256
-			case "RS384":
-				signingMethod = jwt.SigningMethodRS384
-			case "RS512":
-				signingMethod = jwt.SigningMethodRS512
-			default:
-				signingMethod = jwt.SigningMethodHS256 // default fallback
+			if method, exists := signingMethods[algStr]; exists {
+				signingMethod = method
 			}
-		} else {
-			signingMethod = jwt.SigningMethodHS256 // default fallback
 		}
-	} else {
-		signingMethod = jwt.SigningMethodHS256 // default fallback
 	}
 
 	token := jwt.NewWithClaims(signingMethod, claims)
