@@ -14,34 +14,26 @@ import (
 
 func NewBubbleTeamModel() BubbleTeaModel {
 	decoderJWTModel := NewJWTTokenModel()
-	decoderJWTModel.ZoneID = ZoneDecoderJWTTextArea
 	decoderJWTModel.ElementID = ElementDecoderJWTTextArea
 	decoderSecretModel := NewJWTSecretModel()
-	decoderSecretModel.ZoneID = ZoneDecoderSecretTextArea
 	decoderSecretModel.ElementID = ElementDecoderSecretTextArea
 	decoderHeaderModel := NewJWTHeaderModel()
-	decoderHeaderModel.ZoneID = ZoneDecoderHeaderTextArea
 	decoderHeaderModel.ElementID = ElementDecoderHeaderTextArea
 	decoderHeaderModel.Title = TitleDecodedHeader
 	decoderPayloadModel := NewJWTPayloadModel()
-	decoderPayloadModel.ZoneID = ZoneDecoderPayloadTextArea
 	decoderPayloadModel.ElementID = ElementDecoderPayloadTextArea
 	decoderPayloadModel.Title = TitleDecodedPayload
 
 	encoderJWTModel := NewJWTTokenModel()
-	encoderJWTModel.ZoneID = ZoneEncoderJWTTextArea
 	encoderJWTModel.ElementID = ElementEncoderJWTTextArea
 	encoderJWTModel.SetEditingMode(false) // In encoder view, JWT is output
 	encoderSecretModel := NewJWTSecretModel()
-	encoderSecretModel.ZoneID = ZoneEncoderSecretTextArea
 	encoderSecretModel.ElementID = ElementEncoderSecretTextArea
 	encoderHeaderModel := NewJWTHeaderModel()
-	encoderHeaderModel.ZoneID = ZoneEncoderHeaderTextArea
 	encoderHeaderModel.ElementID = ElementEncoderHeaderTextArea
 	encoderHeaderModel.Title = TitleEncoderHeader
 	encoderHeaderModel.SetEditingMode(true) // In encoder view, header is input
 	encoderPayloadModel := NewJWTPayloadModel()
-	encoderPayloadModel.ZoneID = ZoneEncoderPayloadTextArea
 	encoderPayloadModel.ElementID = ElementEncoderPayloadTextArea
 	encoderPayloadModel.Title = TitleEncoderPayload
 	encoderPayloadModel.SetEditingMode(true) // In encoder view, payload is input
@@ -187,31 +179,31 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch m.SelectedView {
 			case ViewJWTDecoder:
 				switch {
-				case zone.Get(ZoneDecoderJWTTextArea).InBounds(msg):
+				case zone.Get(string(ElementDecoderJWTTextArea)).InBounds(msg):
 					m.FocusedElement = ElementDecoderJWTTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneDecoderSecretTextArea).InBounds(msg):
+				case zone.Get(string(ElementDecoderSecretTextArea)).InBounds(msg):
 					m.FocusedElement = ElementDecoderSecretTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneDecoderHeaderTextArea).InBounds(msg):
+				case zone.Get(string(ElementDecoderHeaderTextArea)).InBounds(msg):
 					m.FocusedElement = ElementDecoderHeaderTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneDecoderPayloadTextArea).InBounds(msg):
+				case zone.Get(string(ElementDecoderPayloadTextArea)).InBounds(msg):
 					m.FocusedElement = ElementDecoderPayloadTextArea
 					return m, FocusElementCmd(m.FocusedElement)
 				}
 			case ViewJWTEncoder:
 				switch {
-				case zone.Get(ZoneEncoderHeaderTextArea).InBounds(msg):
+				case zone.Get(string(ElementEncoderHeaderTextArea)).InBounds(msg):
 					m.FocusedElement = ElementEncoderHeaderTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneEncoderPayloadTextArea).InBounds(msg):
+				case zone.Get(string(ElementEncoderPayloadTextArea)).InBounds(msg):
 					m.FocusedElement = ElementEncoderPayloadTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneEncoderSecretTextArea).InBounds(msg):
+				case zone.Get(string(ElementEncoderSecretTextArea)).InBounds(msg):
 					m.FocusedElement = ElementEncoderSecretTextArea
 					return m, FocusElementCmd(m.FocusedElement)
-				case zone.Get(ZoneEncoderJWTTextArea).InBounds(msg):
+				case zone.Get(string(ElementEncoderJWTTextArea)).InBounds(msg):
 					m.FocusedElement = ElementEncoderJWTTextArea
 					return m, FocusElementCmd(m.FocusedElement)
 				}
