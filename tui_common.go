@@ -79,7 +79,6 @@ var (
 			Bold(true)
 
 	styleActiveScreen = lipgloss.NewStyle().
-				Bold(true).
 				Underline(true).
 				Background(lipgloss.Color("#db3fce"))
 

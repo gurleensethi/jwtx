@@ -13,30 +13,14 @@ import (
 )
 
 func NewBubbleTeamModel() BubbleTeaModel {
-	decoderJWTModel := NewJWTTokenModel()
-	decoderJWTModel.ElementID = ElementDecoderJWTTextArea
-	decoderSecretModel := NewJWTSecretModel()
-	decoderSecretModel.ElementID = ElementDecoderSecretTextArea
-	decoderHeaderModel := NewJWTHeaderModel()
-	decoderHeaderModel.ElementID = ElementDecoderHeaderTextArea
-	decoderHeaderModel.Title = TitleDecodedHeader
-	decoderPayloadModel := NewJWTPayloadModel()
-	decoderPayloadModel.ElementID = ElementDecoderPayloadTextArea
-	decoderPayloadModel.Title = TitleDecodedPayload
-
-	encoderJWTModel := NewJWTTokenModel()
-	encoderJWTModel.ElementID = ElementEncoderJWTTextArea
-	encoderJWTModel.SetEditingMode(false) // In encoder view, JWT is output
-	encoderSecretModel := NewJWTSecretModel()
-	encoderSecretModel.ElementID = ElementEncoderSecretTextArea
-	encoderHeaderModel := NewJWTHeaderModel()
-	encoderHeaderModel.ElementID = ElementEncoderHeaderTextArea
-	encoderHeaderModel.Title = TitleEncoderHeader
-	encoderHeaderModel.SetEditingMode(true) // In encoder view, header is input
-	encoderPayloadModel := NewJWTPayloadModel()
-	encoderPayloadModel.ElementID = ElementEncoderPayloadTextArea
-	encoderPayloadModel.Title = TitleEncoderPayload
-	encoderPayloadModel.SetEditingMode(true) // In encoder view, payload is input
+	decoderJWTModel := NewPanelModel(ElementDecoderJWTTextArea, TitleJWTToken, PlaceholderJWT, true)
+	decoderSecretModel := NewPanelModel(ElementDecoderSecretTextArea, TitleSecret, PlaceholderSecret, true)
+	decoderHeaderModel := NewPanelModel(ElementDecoderHeaderTextArea, TitleDecodedHeader, "Enter header JSON here...", false)
+	decoderPayloadModel := NewPanelModel(ElementDecoderPayloadTextArea, TitleDecodedPayload, "Enter payload JSON here...", false)
+	encoderHeaderModel := NewPanelModel(ElementEncoderHeaderTextArea, TitleEncoderHeader, "Enter header JSON here...", true)
+	encoderPayloadModel := NewPanelModel(ElementEncoderPayloadTextArea, TitleEncoderPayload, "Enter payload JSON here...", true)
+	encoderSecretModel := NewPanelModel(ElementEncoderSecretTextArea, TitleSecret, PlaceholderSecret, true)
+	encoderJWTModel := NewPanelModel(ElementEncoderJWTTextArea, TitleJWTToken, PlaceholderJWT, false)
 
 	decoderHelpModel := help.New()
 
@@ -62,16 +46,16 @@ type BubbleTeaModel struct {
 	SelectedView   View
 	FocusedElement Element
 
-	DecoderJWTModel        JWTTokenModel
-	DecoderSecretModel     JWTSecretModel
-	DecoderJWTHeaderModel  JWTHeaderModel
-	DecoderJWTPayloadModel JWTPayloadModel
+	DecoderJWTModel        PanelModel
+	DecoderSecretModel     PanelModel
+	DecoderJWTHeaderModel  PanelModel
+	DecoderJWTPayloadModel PanelModel
 	DecodeResult           *JWTDecodeResult
 
-	EncoderJWTModel        JWTTokenModel
-	EncoderSecretModel     JWTSecretModel
-	EncoderJWTHeaderModel  JWTHeaderModel
-	EncoderJWTPayloadModel JWTPayloadModel
+	EncoderJWTModel        PanelModel
+	EncoderSecretModel     PanelModel
+	EncoderJWTHeaderModel  PanelModel
+	EncoderJWTPayloadModel PanelModel
 	EncodeResult           *JWTEncodeResult
 
 	HelpModel help.Model
@@ -201,8 +185,8 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 
 		m.DecodeResult = nil
-		token := m.DecoderJWTModel.GetToken()
-		secret := m.DecoderSecretModel.GetSecret()
+		token := m.DecoderJWTModel.GetValue()
+		secret := m.DecoderSecretModel.GetValue()
 
 		if token != "" {
 			m.DecodeResult = JWTDecodeToken(token, secret)
@@ -222,11 +206,11 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if m.DecodeResult.Token != nil {
-				m.DecoderJWTHeaderModel.SetData(m.DecodeResult.JsonMarshaledHeader())
-				m.DecoderJWTPayloadModel.SetData(m.DecodeResult.JsonMarshaledClaims())
+				m.DecoderJWTHeaderModel.SetValue(m.DecodeResult.JsonMarshaledHeader())
+				m.DecoderJWTPayloadModel.SetValue(m.DecodeResult.JsonMarshaledClaims())
 			} else {
-				m.DecoderJWTHeaderModel.SetData("")
-				m.DecoderJWTPayloadModel.SetData("")
+				m.DecoderJWTHeaderModel.SetValue("")
+				m.DecoderJWTPayloadModel.SetValue("")
 			}
 		} else {
 			m.DecoderJWTModel.SetError("")
@@ -247,10 +231,10 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		var headerStr, payloadStr string
 
-		headerStr = m.EncoderJWTHeaderModel.GetData()
-		payloadStr = m.EncoderJWTPayloadModel.GetData()
+		headerStr = m.EncoderJWTHeaderModel.GetValue()
+		payloadStr = m.EncoderJWTPayloadModel.GetValue()
 
-		secretStr := m.EncoderSecretModel.GetSecret()
+		secretStr := m.EncoderSecretModel.GetValue()
 
 		var headerError, payloadError string
 
@@ -274,9 +258,9 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if (headerStr != "" && headerError == "") && (payloadStr != "" && payloadError == "") {
 			m.EncodeResult = JWTEncodeToken(header, claims, secretStr)
-			m.EncoderJWTModel.SetToken(m.EncodeResult.Token)
+			m.EncoderJWTModel.SetValue(m.EncodeResult.Token)
 		} else {
-			m.EncoderJWTModel.SetToken("")
+			m.EncoderJWTModel.SetValue("")
 			m.EncodeResult = &JWTEncodeResult{
 				Token:        "",
 				HeaderError:  headerError,
@@ -340,7 +324,7 @@ func (m BubbleTeaModel) View() tea.View {
 	}
 
 	header := styleHeader.Width(m.WindowSize.Width).
-		Render(decoderStyle.Render(TitleDecoder) + styleInactiveScreen.Render(" | ") + encoderStyle.Render(TitleEncoder) + styleInactiveScreen.Render(" (switch: ctrl+\\)"))
+		Render(decoderStyle.Render(TitleDecoder) + styleInactiveScreen.Render(" | ") + encoderStyle.Render(TitleEncoder))
 
 	footer := lipgloss.NewStyle().Padding(0, 1, 0, 1).MarginTop(1).Render(m.HelpModel.View(m))
 
